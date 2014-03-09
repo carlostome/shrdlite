@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> 
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>Shrdlite</title>
+  <link rel="stylesheet" href="shrdlite.css" type="text/css" />
+  <script type="text/javascript" src="jquery-1.11.0.min.js"></script>
+  <script type="text/javascript" src="shrdlite.js"></script>
+</head>
+<body>
+<table id="maincontent">
+  <tr>
+    <th><h1>Shrdlite</h1>
+    <th id="exampleworlds">Examples:
+  </tr><tr>
+    <td id="svgdiv"></td>
+    <td>
+      <div id="dialogue">
+        <form id="inputform">
+          <p><select id="inputexamples"><option value=""></option></select>
+            <br><input type="text" id="userinput">
+          </p>
+        </form>
+      </div>
+    </td>
+  </tr>
+</table>
+
+<div id="footer">
+  <hr>
+  <div id="license">
+    <strong>shrdlite.html</strong> <br>
+    Copyright &copy; 2013-14, Peter Ljungl&ouml;f. <br>
+    This program comes with <em>absolutely no warranty</em>. <br>
+    This is free software, and you are welcome to redistribute it under certain conditions; 
+    read <a href="http://www.gnu.org/licenses/gpl.html" target="__blank"><em>the license</em></a> for details.
+  </div>
+  <div id="debugdiv">
+    <strong>debug</strong> <input type="checkbox" id="showdebug"> 
+    <table id="debug">
+      <tr><td><b>World</b></td><td id="debugworld"></td></tr>
+      <tr><td><b>Holding</b></td><td id="debugholding"></td></tr>
+      <tr><td><b>Output</b></td><td id="debugoutput"></td></tr>
+      <tr><td><b>Trees</b></td><td id="debugtrees"></td></tr>
+      <tr><td><b>Goals</b></td><td id="debuggoals"></td></tr>
+      <tr><td><b>Plan</b></td><td id="debugplan"></td></tr>
+      <tr><td><b>JSON</b></td><td id="debugjson"></td></tr>
+    </table>
+  </div>
+</div>
+</body> 
+</html>

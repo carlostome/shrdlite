@@ -1,0 +1,27 @@
+{ 
+    "world": [[],["a","b"],["c","d"],[],["e","f","g","h","i"],[],[],["j","k"],[],["l","m"]],
+    "holding": null,
+    "blocks": {
+        "a": { "form":"rectangle", "size":"tall",   "color":"blue"  },
+        "b": { "form":"ball",      "size":"small",  "color":"white" },
+        "c": { "form":"square",    "size":"large",  "color":"red"   },
+        "d": { "form":"pyramid",   "size":"large",  "color":"green" },
+        "e": { "form":"box",       "size":"large",  "color":"white" },
+        "f": { "form":"rectangle", "size":"wide",   "color":"black" },
+        "g": { "form":"rectangle", "size":"wide",   "color":"blue"  },
+        "h": { "form":"rectangle", "size":"wide",   "color":"red"   },
+        "i": { "form":"pyramid",   "size":"medium", "color":"yellow"},
+        "j": { "form":"box",       "size":"large",  "color":"red"   },
+        "k": { "form":"ball",      "size":"small",  "color":"yellow"},
+        "l": { "form":"box",       "size":"medium", "color":"red"   },
+        "m": { "form":"ball",      "size":"medium", "color":"blue"  }
+    },
+    "utterance": 
+        ["put","the","blue","block","that","is","to","the","left","of","a","pyramid","in","a","medium-sized","box"],
+    "examples": [
+        ["put","the","blue","block","that","is","to","the","left","of","a","pyramid","in","a","medium-sized","box"],
+        ["move","all","blocks","inside","a","box","on","top","of","the","red","square"],
+        ["put","the","wide","blue","block","under","the","black","rectangle"],
+        ["move","all","wide","rectangles","into","a","red","box"]
+    ]
+}

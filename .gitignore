@@ -1,0 +1,6 @@
+*.class
+*.gfo
+*.hi
+*.o
+*.pyc
+__pycache__
