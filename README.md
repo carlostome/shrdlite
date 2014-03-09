@@ -153,7 +153,10 @@ are GF bindings for C/C++, Haskell and Python.
 ### Python (with NLTK)
 
 To use this grammar you need to install Python and NLTK,
-see instructions at <http://www.nltk.org>.
+see instructions here:
+
+- <http://www.python.org/> (only if you have Windows)
+- <http://www.nltk.org/>
 
 There is one grammar file, `shrdlite_grammar.fcfg`, which can be used like this:
 
@@ -186,6 +189,10 @@ be able to do this:
 
     swipl -q -g main,halt -s shrdlite.pl < ../ex1.json
 
+More information about SWI Prolog can found here: 
+
+- <http://www.swi-prolog.org/>
+
 ### Java
 
 There are no good grammar libraries for Java, so this version uses the 
@@ -193,6 +200,11 @@ Prolog grammar via the GNUPrologJava library. After compilation you can
 test the command line program like this:
 
     java -cp gnuprologjava-0.2.6.jar:json-simple-1.1.1.jar:. Shrdlite < ../ex1.json
+
+Read more about the needed libraries here:
+
+- <http://www.gnu.org/software/gnuprologjava/>
+- <http://code.google.com/p/json-simple/>
 
 ### Haskell
 
@@ -209,3 +221,6 @@ To test the command line program `Shrdlite.hs` just do this:
 
     runhaskell Shrdlite.hs < ../ex1.json
 
+To be able to read and write JSON, you have to install Text.JSON:
+
+- <http://hackage.haskell.org/package/json>
