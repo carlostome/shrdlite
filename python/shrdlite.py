@@ -15,9 +15,14 @@ def parse(utterance):
     import nltk
     grammar = nltk.data.load("file:" + GRAMMAR_FILE, cache=False)
     parser = nltk.FeatureChartParser(grammar)
+    # API change between NLTK v2 and v3:
+    # - v2 uses .nbest_parse()
+    # - v3 will probably use .parse_all() or .parse() instead
+    do_parse = getattr(parser, 'nbest_parse', 
+                       getattr(parser, 'parse_all', parser.parse))
     try:
         return [result.label()['sem'] 
-                for result in parser.parse(utterance)]
+                for result in do_parse(utterance)]
     except ValueError:
         return []
 
@@ -27,7 +32,7 @@ def interpret(tree, world, blocks):
 
 
 def solve(goal, world, blocks):
-    col = map(bool, world).index(True)
+    col = list(map(bool, world)).index(True)
     return ["I pick up...", 'pick %d' % col, "...and I drop down", 'drop %d' % col]
 
 
