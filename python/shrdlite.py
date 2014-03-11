@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # Test from the command line:
-# ./shrdlite.py < ../ex1.json
+# python shrdlite.py < ../examples/medium.json
 
 from __future__ import print_function
 
@@ -27,16 +27,16 @@ def parse(utterance):
         return []
 
 
-def interpret(tree, world, blocks):
+def interpret(tree, world, holding, objects):
     return [True]
 
 
-def solve(goal, world, blocks):
+def solve(goal, world, holding, objects):
     col = list(map(bool, world)).index(True)
     return ["I pick up . . .", 'pick %d' % col, ". . . and I drop down", 'drop %d' % col]
 
 
-def main(utterance, world, blocks, **_):
+def main(utterance, world, holding, objects, **_):
     result = {}
     result['utterance'] = utterance
     trees = parse(utterance)
@@ -45,7 +45,7 @@ def main(utterance, world, blocks, **_):
         result['output'] = "Parse error!"
         return result
     result['goals'] = goals = [goal for tree in trees
-                               for goal in interpret(tree, world, blocks)]
+                               for goal in interpret(tree, world, holding, objects)]
     if not goals:
         result['output'] = "Interpretation error!"
         return result
@@ -53,7 +53,7 @@ def main(utterance, world, blocks, **_):
         result['output'] = "Ambiguity error!"
         return result
     goal = goals[0]
-    result['plan'] = plan = solve(goal, world, blocks)
+    result['plan'] = plan = solve(goal, world, holding, objects)
     if not plan:
         result['output'] = "Planning error!"
         return result

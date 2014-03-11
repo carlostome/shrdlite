@@ -41,7 +41,7 @@ var Drop = 'drop';
 
 var SvgNS = 'http://www.w3.org/2000/svg';
 
-var BlockData = {
+var ObjectData = {
     "brick":   {"small": {"width":0.30, "height":0.30},
                 "large": {"width":0.70, "height":0.60},
                },
@@ -168,9 +168,9 @@ function resetSVG() {
 
     var timeout = 0;
     for (var stacknr=0; stacknr < currentWorld.world.length; stacknr++) {
-        for (var blocknr=0; blocknr < currentWorld.world[stacknr].length; blocknr++) {
-            var blockid = currentWorld.world[stacknr][blocknr];
-            makeBlock(svg, blockid, stacknr, timeout);
+        for (var objectnr=0; objectnr < currentWorld.world[stacknr].length; objectnr++) {
+            var objectid = currentWorld.world[stacknr][objectnr];
+            makeObject(svg, objectid, stacknr, timeout);
             timeout += AnimationPause;
         }
     }
@@ -197,12 +197,12 @@ function animateMotion(object, path, timeout, duration) {
     return animation;
 }
 
-function moveBlock(action, stackNr) {
+function moveObject(action, stackNr) {
     if (action == Pick && currentWorld.holding) {
-        alertError("ERROR", "I cannot pick a block from stack " + stackNr + ", I am already holding something!")
+        alertError("ERROR", "I cannot pick an object from stack " + stackNr + ", I am already holding something!")
         return 0;
     } else if (action == Drop && !currentWorld.holding) {
-        alertError("ERROR", "I cannot drop a block onto stack " + stackNr + ", I am not holding anything!")
+        alertError("ERROR", "I cannot drop an object onto stack " + stackNr + ", I am not holding anything!")
         return 0;
     }
     var stack = currentWorld.world[stackNr];
@@ -212,15 +212,15 @@ function moveBlock(action, stackNr) {
 
     if (action == Pick) {
         if (!stack.length) {
-            alertError("ERROR", "I cannot pick a block from stack " + stackNr + ", it is empty!")
+            alertError("ERROR", "I cannot pick an object from stack " + stackNr + ", it is empty!")
             return 0;
         }
         currentWorld.holding = stack.pop();
     }
 
     var altitude = getAltitude(stack);
-    var blockHeight = getBlockDimensions(currentWorld.holding).heightadd;
-    var yArm = CanvasHeight - altitude - ArmSize * stackWidth() - blockHeight;
+    var objectHeight = getObjectDimensions(currentWorld.holding).heightadd;
+    var yArm = CanvasHeight - altitude - ArmSize * stackWidth() - objectHeight;
     var yStack = -altitude;
 
     var path1 = ["M", xArm, 0, "H", xStack, "V", yArm];
@@ -247,9 +247,9 @@ function moveBlock(action, stackNr) {
     return duration1 + duration2 + 2 * AnimationPause;
 }
 
-function getBlockDimensions(blockid) {
-    var attrs = currentWorld.blocks[blockid];
-    var size = BlockData[attrs.form][attrs.size];
+function getObjectDimensions(objectid) {
+    var attrs = currentWorld.objects[objectid];
+    var size = ObjectData[attrs.form][attrs.size];
     var width = size.width * (stackWidth() - boxSpacing());
     var height = size.height * (stackWidth() - boxSpacing());
     var thickness = size.thickness * (stackWidth() - boxSpacing());
@@ -262,20 +262,20 @@ function getBlockDimensions(blockid) {
     };
 }
 
-function getAltitude(stack, blockid) {
+function getAltitude(stack, objectid) {
     var altitude = 0;
     for (var i=0; i<stack.length; i++) {
-        if (blockid == stack[i])
+        if (objectid == stack[i])
             break;
-        altitude += getBlockDimensions(stack[i]).heightadd + boxSpacing();
+        altitude += getObjectDimensions(stack[i]).heightadd + boxSpacing();
     }
     return altitude;
 }
 
-function makeBlock(svg, blockid, stacknr, timeout) {
-    var attrs = currentWorld.blocks[blockid];
-    var altitude = getAltitude(currentWorld.world[stacknr], blockid);
-    var dim = getBlockDimensions(blockid);
+function makeObject(svg, objectid, stacknr, timeout) {
+    var attrs = currentWorld.objects[objectid];
+    var altitude = getAltitude(currentWorld.world[stacknr], objectid);
+    var dim = getObjectDimensions(objectid);
 
     var ybottom = CanvasHeight - boxSpacing();
     var ytop = ybottom - dim.height;
@@ -288,11 +288,11 @@ function makeBlock(svg, blockid, stacknr, timeout) {
     var xmidleft = (xcenter + xleft) / 2;
     var xmidright = (xcenter + xright) / 2;
 
-    var block;
+    var object;
     switch (attrs.form) {
     case 'brick':
     case 'plank':
-        block = $(SVG('rect')).attr({
+        object = $(SVG('rect')).attr({
             x: xleft, 
             y: ytop, 
             width: dim.width, 
@@ -300,7 +300,7 @@ function makeBlock(svg, blockid, stacknr, timeout) {
         });
         break;
     case 'ball':
-        block = $(SVG('ellipse')).attr({
+        object = $(SVG('ellipse')).attr({
             cx: xcenter, 
             cy: ycenter, 
             rx: xradius, 
@@ -309,7 +309,7 @@ function makeBlock(svg, blockid, stacknr, timeout) {
         break;
     case 'pyramid':
         var points = [xleft, ybottom, xmidleft, ytop, xmidright, ytop, xright, ybottom];
-        block = $(SVG('polygon')).attr({
+        object = $(SVG('polygon')).attr({
             points: points.join(" ")
         });
         break;
@@ -317,7 +317,7 @@ function makeBlock(svg, blockid, stacknr, timeout) {
         var points = [xleft, ytop, xleft, ybottom, xright, ybottom, xright, ytop, 
                       xright-dim.thickness, ytop, xright-dim.thickness, ybottom-dim.thickness,
                       xleft+dim.thickness, ybottom-dim.thickness, xleft+dim.thickness, ytop];
-        block = $(SVG('polygon')).attr({
+        object = $(SVG('polygon')).attr({
             points: points.join(" ")
         });
         break;
@@ -327,23 +327,23 @@ function makeBlock(svg, blockid, stacknr, timeout) {
                       xmidright-dim.thickness, ybottom, xmidright-dim.thickness, ytop+dim.thickness,
                       xmidleft+dim.thickness, ytop+dim.thickness, xmidleft+dim.thickness, ybottom,
                       xmidleft, ybottom, xmidleft, ytop+dim.thickness, xleft, ytop+dim.thickness];
-        block = $(SVG('polygon')).attr({
+        object = $(SVG('polygon')).attr({
             points: points.join(" ")
         });
         break;
     }
-    block.attr({
-        id: blockid,
+    object.attr({
+        id: objectid,
         stroke: 'black', 
         'stroke-width': boxSpacing() / 2, 
         fill: attrs.color, 
     });
-    block.appendTo(svg);
+    object.appendTo(svg);
 
     var path = ["M", stacknr * stackWidth() + WallSeparation, -(CanvasHeight + FloorThickness)];
-    animateMotion(block, path, 0, 0);
+    animateMotion(object, path, 0, 0);
     path.push("V", -altitude);
-    animateMotion(block, path, timeout, 0.5);
+    animateMotion(object, path, timeout, 0.5);
 }
 
 function disableInput(timeout) {
@@ -379,7 +379,7 @@ function performPlan() {
         var timeout = 0;
         var action = getAction(item);
         if (action) {
-            timeout = moveBlock(action[0], action[1]);
+            timeout = moveObject(action[0], action[1]);
         } else if (item && item[0] != "#") {
             if (window.speechSynthesis.speaking) {
                 currentPlan.unshift(item);
@@ -426,7 +426,7 @@ function userInput() {
     sayUtterance("user", userinput);
 
     var ajaxdata = {'world': currentWorld.world,
-                    'blocks': currentWorld.blocks,
+                    'objects': currentWorld.objects,
                     'holding': currentWorld.holding,
                     'utterance': userinput.split(/\s+/)
                    };

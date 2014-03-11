@@ -3,7 +3,7 @@
 -- You need the 'json' package: cabal install json
 
 -- Test from the command line:
--- ./Shrdlite.hs < ../ex1.json
+-- runhaskell Shrdlite.hs < ../examples/medium.json
 
 module Main where 
 
@@ -15,7 +15,7 @@ import Data.List (findIndex)
 type Utterance = [String]
 type Id = String
 type World = [[Id]]
-type Blocks = JSObject JSValue
+type Objects = JSObject JSValue
 type Goal = Bool
 type Plan = [String]
 
@@ -29,13 +29,14 @@ jsonMain jsinput = makeObj result
     where 
       utterance = ok (valFromObj "utterance" jsinput) :: Utterance
       world     = ok (valFromObj "world"     jsinput) :: World
-      blocks    = ok (valFromObj "blocks"    jsinput) :: Blocks
+      holding   = ok (valFromObj "holding"   jsinput) :: Id
+      objects   = ok (valFromObj "objects"   jsinput) :: Objects
 
       trees     = parse command utterance :: [Command]
 
-      goals     = [goal | tree <- trees, goal <- interpret world blocks tree] :: [Goal]
+      goals     = [goal | tree <- trees, goal <- interpret world holding objects tree] :: [Goal]
 
-      plan      = solve world blocks (head goals) :: Plan
+      plan      = solve world holding objects (head goals) :: Plan
 
       output    = if null trees then "Parse error!"
                   else if null goals then "Interpretation error!"
@@ -51,12 +52,12 @@ jsonMain jsinput = makeObj result
                   ]
 
 
-interpret :: World -> Blocks -> Command -> [Goal]
-interpret world blocks tree = [True]
+interpret :: World -> Id -> Objects -> Command -> [Goal]
+interpret world holding objects tree = [True]
 
 
-solve :: World -> Blocks -> Goal -> Plan
-solve world blocks goal = ["I picked it up . . .", "pick " ++ show col, ". . . and I dropped it down", "drop " ++ show col]
+solve :: World -> Id -> Objects -> Goal -> Plan
+solve world holding objects goal = ["I picked it up . . .", "pick " ++ show col, ". . . and I dropped it down", "drop " ++ show col]
     where
       Just col = findIndex (not . null) world
 

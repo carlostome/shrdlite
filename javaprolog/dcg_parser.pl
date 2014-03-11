@@ -4,13 +4,13 @@
   stored using the predicate '--->'/2.
 
   Call like this:
-  ?- parse(command, [take, the, green, ball], Tree).
-  Tree = take(basic_entity(the, block(ball, -, green))) ;
+  ?- parse(command, [take, the, white, ball], Tree).
+  Tree = take(basic_entity(the, object(ball, -, white))) ;
   no (more) solutions
 
   ...or like this:
-  ?- parse_all(command, [take, the, green, ball], Trees).
-  Trees = [take(basic_entity(the, block(ball, -, green)))]
+  ?- parse_all(command, [take, the, white, ball], Trees).
+  Trees = [take(basic_entity(the, object(ball, -, white)))]
 */
 
 %% parse_all(+Startcat : atom, +Sentence : list(atom), -ParseTrees : list(term))
