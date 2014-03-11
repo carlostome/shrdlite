@@ -2,24 +2,28 @@
 
 from __future__ import print_function
 
+import os
 import cgi
 from subprocess import Popen, PIPE, STDOUT
 
 # # Java
 # SCRIPTDIR = 'javaprolog'
-# SCRIPT = ['java', '-cp', 'json-simple-1.1.1.jar:gnuprologjava-0.2.6.jar:.', 'Shrdlite']
+# SCRIPT = ['/usr/bin/java', '-cp', 'json-simple-1.1.1.jar:gnuprologjava-0.2.6.jar:.', 'Shrdlite']
 
-# SWI Prolog
-SCRIPTDIR = 'javaprolog'
-SCRIPT = ['swipl', '-q', '-g', 'main,halt', '-t', 'halt(1)', '-s', 'shrdlite.pl']
+# # SWI Prolog
+# SCRIPTDIR = 'javaprolog'
+# SCRIPT = ['/usr/local/bin/swipl', '-q', '-g', 'main,halt', '-t', 'halt(1)', '-s', 'shrdlite.pl']
 
 # # Haskell
 # SCRIPTDIR = 'haskell'
-# SCRIPT = ['runhaskell', 'Shrdlite.hs']
+# SCRIPT = ['/usr/bin/runhaskell', 'Shrdlite.hs']
 
-# # Python
-# SCRIPTDIR = 'python'
-# SCRIPT = ['python', 'shrdlite.py']
+# Python
+SCRIPTDIR = 'python'
+SCRIPT = ['/usr/bin/python', 'shrdlite.py']
+
+while not os.path.isdir(SCRIPTDIR):
+    SCRIPTDIR = os.path.join("..", SCRIPTDIR)
 
 print('Content-type:text/plain')
 print()

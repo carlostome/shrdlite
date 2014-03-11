@@ -102,17 +102,10 @@ then you might have to modify some files:
     + Try to rename the `cgi-bin` directory, or move `ajaxwrapper.py`
       to the directory above (and edit `shrdlite.js` accordingly)
 
-- The program that `ajaxwrapper.py` calls might need full paths:
+- The program that `ajaxwrapper.py` calls might need another path:
 
     + Try to replace the first argument of the `SCRIPT` variable in
-      `ajaxwrapper.py`, e.g., `swipl` with `/usr/local/bin/swipl`
-
-- The current script assumes that the working directory for the Ajax call
-  will be the same as `shrdlite.html`, but some web servers use the
-  `cgi-bin` directory instead:
-
-    + In this case you can try to replace the `SCRIPTDIR` in 
-      `ajaxwrapper.py`, e.g., `javaprolog` with `../javaprolog`
+      `ajaxwrapper.py`, e.g., `/usr/bin/python` with `/usr/local/bin/python`
 
 The command line program
 ------------------------
