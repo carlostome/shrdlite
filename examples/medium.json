@@ -1,0 +1,33 @@
+{ 
+    "world": [["e"],["a","l"],[],[],["i","h","j"],[],[],["k","g","c","b"],[],["d","m","f"]],
+    "holding": null,
+    "blocks": {
+        "a": { "form":"brick",   "size":"large",  "color":"green" },
+        "b": { "form":"brick",   "size":"small",  "color":"white" },
+        "c": { "form":"plank",   "size":"large",  "color":"red"   },
+        "d": { "form":"plank",   "size":"small",  "color":"green" },
+        "e": { "form":"ball",    "size":"large",  "color":"white" },
+        "f": { "form":"ball",    "size":"small",  "color":"black" },
+        "g": { "form":"table",   "size":"large",  "color":"blue"  },
+        "h": { "form":"table",   "size":"small",  "color":"red"   },
+        "i": { "form":"pyramid", "size":"large",  "color":"yellow"},
+        "j": { "form":"pyramid", "size":"small",  "color":"red"   },
+        "k": { "form":"box",     "size":"large",  "color":"yellow"},
+        "l": { "form":"box",     "size":"large",  "color":"red"   },
+        "m": { "form":"box",     "size":"small",  "color":"blue"  }
+    },
+    "utterance": 
+        ["put","the","brick","that","is","to","the","left","of","a","pyramid","in","a","box"],
+    "examples": [
+        ["put","the","brick","that","is","to","the","left","of","a","pyramid","in","a","box"],
+        ["put","the","white","ball","in","a","box","on","the","floor"],
+        ["move","the","large", "ball","inside","a","yellow","box","on","the","floor"],
+        ["move","the","large", "ball","inside","a","red","box","on","the","floor"],
+        ["take","a","red","object"],
+        ["take","the","white","ball"],
+        ["put","all","boxes","on","the","floor"],
+        ["put","the","large","plank","under","the","blue","brick"],
+        ["move","all","bricks","on","a","table"],
+        ["move","all","balls","inside","a","large","box"]
+    ]
+}

@@ -3,7 +3,8 @@
 var AjaxScript = "cgi-bin/ajaxwrapper.py";
 
 // List of the JSON files that contain example worlds:
-var ExampleNames = ["ex1"];
+var ExampleNames = ["small","medium"];
+var ExamplesFolder = "examples";
 
 // What the system says when it has nothing to do:
 var SystemPromptText = "What can I do for you today?";
@@ -91,7 +92,7 @@ function loadExampleWorlds() {
             .appendTo($("#exampleworlds"));
         $.ajax({
             dataType: "json",
-            url: name + ".json",
+            url: ExamplesFolder + "/" + name + ".json",
             async: false
         }).fail(function(jqxhr, status, error) {
             alertError("Couldn't load example '" + name + "'.json: " + status, error);
