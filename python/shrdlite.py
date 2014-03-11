@@ -33,7 +33,7 @@ def interpret(tree, world, blocks):
 
 def solve(goal, world, blocks):
     col = list(map(bool, world)).index(True)
-    return ["I pick up...", 'pick %d' % col, "...and I drop down", 'drop %d' % col]
+    return ["I pick up . . .", 'pick %d' % col, ". . . and I drop down", 'drop %d' % col]
 
 
 def main(utterance, world, blocks, **_):

@@ -56,7 +56,7 @@ interpret world blocks tree = [True]
 
 
 solve :: World -> Blocks -> Goal -> Plan
-solve world blocks goal = ["I pick up...", "pick " ++ show col, "...and I drop down", "drop " ++ show col]
+solve world blocks goal = ["I picked it up . . .", "pick " ++ show col, ". . . and I dropped it down", "drop " ++ show col]
     where
       Just col = findIndex (not . null) world
 

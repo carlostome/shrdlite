@@ -70,9 +70,9 @@ public class Shrdlite {
                 int column = 0;
                 while (((JSONArray)world.get(column)).isEmpty()) column++;
                 List plan = new ArrayList(); 
-                plan.add("I pick up..."); 
+                plan.add("I pick up . . ."); 
                 plan.add("pick " + column);
-                plan.add("...and I drop down"); 
+                plan.add(". . . and then I drop down"); 
                 plan.add("drop " + column);
                 result.put("plan", plan);
 

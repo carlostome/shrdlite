@@ -47,7 +47,7 @@ main :-
 
 solve(_Goal, World, _Blocks, Plan) :-
     nth0(Col, World, [_|_]),
-    Plan = ['I pick up...', [pick, Col], '...and I drop down', [drop, Col]].
+    Plan = ['I pick it up . . .', [pick, Col], '. . . and I drop it down', [drop, Col]].
 
 
 interpret(_Tree, _World, _Blocks, @(true)).

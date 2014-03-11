@@ -20,6 +20,13 @@ var AnimationPause = 0.1; // seconds
 var PromptPause = 0.5;   // seconds
 var AjaxTimeout = 5;    // seconds
 
+// W3C Speech API currently works in Chrome and Safari,
+// but there is no way of setting male/female voice,
+// so this is one way of having different voices for user/system:
+var Voices = {"system": {"lang": "en-GB", "rate": 1.2}, // British English, slightly faster
+              "user": {"lang": "en-US"},  // American English
+             };
+
 
 //==============================================================================
 //
@@ -126,7 +133,7 @@ function resetCurrentExample(name) {
 function resetSVG() {
     disableInput();
     $("#response").empty();
-    addUtterance("system", "Please wait while I populate the world.");
+    sayUtterance("system", "Please wait while I populate the world.");
     $('#svgdiv').empty();
 
     var viewBox = [0, 0, CanvasWidth, CanvasHeight + FloorThickness];
@@ -353,7 +360,7 @@ function systemPrompt(timeout) {
     if (timeout) {
         setTimeout(systemPrompt, 1000*timeout);
     } else {
-        addUtterance("system", SystemPromptText);
+        sayUtterance("system", SystemPromptText);
         enableInput();
     }
 }
@@ -373,7 +380,12 @@ function performPlan() {
         if (action) {
             timeout = moveBlock(action[0], action[1]);
         } else if (item && item[0] != "#") {
-            addUtterance("system", item);
+            if (window.speechSynthesis.speaking) {
+                currentPlan.unshift(item);
+                timeout = AnimationPause;
+            } else {
+                sayUtterance("system", item);
+            }
         }
         setTimeout(performPlan, 1000 * timeout);
     } else {
@@ -410,7 +422,7 @@ function userInput() {
     }
     disableInput();
 
-    addUtterance("user", userinput);
+    sayUtterance("user", userinput);
 
     var ajaxdata = {'world': currentWorld.world,
                     'blocks': currentWorld.blocks,
@@ -434,13 +446,13 @@ function userInput() {
             alertError("JSON error:" + err, result);
         }
         debugResult(result);
-        addUtterance("system", result.output);
+        sayUtterance("system", result.output);
         currentPlan = result.plan;
         performPlan();
     });
 }
 
-function addUtterance(participant, utterance) {
+function sayUtterance(participant, utterance, silent) {
     var dialogue = $("#dialogue");
     if (dialogue.children().length > DialogueHistory) {
         dialogue.children().first().remove();
@@ -449,6 +461,18 @@ function addUtterance(participant, utterance) {
         .text(utterance)
         .insertBefore($("#inputform"));
     dialogue.scrollTop(dialogue.prop("scrollHeight"));
+    if (!silent) {
+        try {
+            // W3C Speech API (works in Chrome and Safari)
+            var speech = new SpeechSynthesisUtterance(utterance);
+            for (var attr in Voices[participant]) {
+                speech[attr] = Voices[participant][attr];
+            }
+            console.log("SPEAKING: " + utterance);
+            window.speechSynthesis.speak(speech);
+        } catch(err) {
+        }
+    }
 }
 
 function debugWorld() {
@@ -466,7 +490,7 @@ function debugResult(result) {
 
 function alertError(title, description) {
     if (typeof(description) !== "string") description = JSON.stringify(description);
-    addUtterance("error", "[" + title + "] " + description);
+    sayUtterance("error", "[" + title + "] " + description, true);
     console.log("*** " + title + " ***");
     console.log(description);
 }
