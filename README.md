@@ -76,6 +76,16 @@ Currently there are four possible alternatives for the command line program:
 Just uncomment the appropriate definitions of `SCRIPTDIR` and `SCRIPT` 
 in `ajaxwrapper.py`, and you should be ready to go.
 
+Speech synthesis
+-----------------
+
+The latest versions of Safari (v6.1 or later) and Chrome (v33 or later) 
+have implemented the W3C Web Speech API. Shrdlite uses this if possible!
+
+- <https://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi.html>
+- <http://www.broken-links.com/2013/09/20/web-speech-api-part-one-speech-synthesis>
+
+
 Alternative webserver
 ---------------------
 
@@ -84,12 +94,13 @@ then you might have to modify some files:
 
 - Some webservers only allow CGI scripts with file suffix ".cgi":
 
-    + Try to rename `cgi-bin/ajaxwrapper.py` to `cgi-bin/ajaxwrapper.cgi`
+    + Try to rename `cgi-bin/ajaxwrapper.py` to `cgi-bin/ajaxwrapper.py.cgi`
+      (and edit `shrdlite.js` accordingly)
 
 - Some webservers require that CGI scripts are in a certain directory:
 
     + Try to rename the `cgi-bin` directory, or move `ajaxwrapper.py`
-      to the directory above
+      to the directory above (and edit `shrdlite.js` accordingly)
 
 - The program that `ajaxwrapper.py` calls might need full paths:
 
@@ -110,9 +121,9 @@ The command line program takes JSON input and should produce JSON output.
 The input JSON contains the following fields:
 
 - "utterance": a list of words (strings)
-- "holding": a block identifier (string) or `null`
-- "world": a list of list of block identifiers (strings)
-- "blocks": a mapping from block identifiers to information about them
+- "holding": an object identifier (string) or `null`
+- "world": a list of list of object identifiers (strings)
+- "objects": a mapping from object identifiers to information about them
 
 The output JSON should contain at least the following:
 
@@ -143,9 +154,9 @@ and `ShrdliteGrammarEng.gf` (the English translations).
 Here is an example run from within the GF runtime:
 
     > i ShrdliteGrammarEng.gf
-    ShrdliteGrammar> p "put the green ball in a box on the floor"
-    move (basic_entity the (block ball ?3 green)) (relative inside (relative_entity any (block box ?10 ?11) (relative ontop floor)))
-    move (relative_entity the (block ball ?3 green) (relative inside (basic_entity any (block box ?9 ?10)))) (relative ontop floor)
+    ShrdliteGrammar> p "put the white ball in a box on the floor"
+    move (basic_entity the (object ball ?3 white)) (relative inside (relative_entity any (object box ?10 ?11) (relative ontop floor)))
+    move (relative_entity the (object ball ?3 white) (relative inside (basic_entity any (object box ?9 ?10)))) (relative ontop floor)
 
 This grammar is not used in any of the command line programs, but there
 are GF bindings for C/C++, Haskell and Python.
@@ -163,15 +174,15 @@ There is one grammar file, `shrdlite_grammar.fcfg`, which can be used like this:
     >>> import nltk
     >>> grammar = nltk.data.load("file:shrdlite_grammar.fcfg", cache=False)
     >>> parser = nltk.FeatureChartParser(grammar)
-    >>> sentence = "put the green ball in a box on the floor".split()
-    >>> for tree in parser.parse(sentence): 
+    >>> sentence = "put the white ball in a box on the floor".split()
+    >>> for tree in parser.nbest_parse(sentence): 
     ...     print tree.label()['sem']
-    (move, (basic_entity, the, (block, ball, -, green)), (relative, inside, (relative_entity, any, (block, box, -, -), (relative, ontop, floor))))
-    (move, (relative_entity, the, (block, ball, -, green), (relative, inside, (basic_entity, any, (block, box, -, -)))), (relative, ontop, floor))
+    (move, (basic_entity, the, (object, ball, -, white)), (relative, inside, (relative_entity, any, (object, box, -, -), (relative, ontop, floor))))
+    (move, (relative_entity, the, (object, ball, -, white), (relative, inside, (basic_entity, any, (object, box, -, -)))), (relative, ontop, floor))
 
 To test the command line program `shrdlite.py`, you can do this:
 
-    python shrdlite.py < ../ex1.json
+    python shrdlite.py < ../medium.json
 
 ### Prolog
 
@@ -179,15 +190,15 @@ There is one grammar file, `shrdlite_grammar.pl`, and one parser file
 `dcg_parser.pl`. They should be usable in most Prologs:
 
     ?- [shrdlite_grammar, dcg_parser].
-    ?- parse(command, [put,the,green,ball,in,a,box,on,the,floor], Tree).
-    Tree = move(basic_entity(the, block(ball, -, green)), relative(inside, relative_entity(any, block(box, -, -), relative(ontop, floor)))) ;
-    Tree = move(relative_entity(the, block(ball, -, green), relative(inside, basic_entity(any, block(box, -, -)))), relative(ontop, floor)) ;
+    ?- parse(command, [put,the,white,ball,in,a,box,on,the,floor], Tree).
+    Tree = move(basic_entity(the, object(ball, -, white)), relative(inside, relative_entity(any, object(box, -, -), relative(ontop, floor)))) ;
+    Tree = move(relative_entity(the, object(ball, -, white), relative(inside, basic_entity(any, object(box, -, -)))), relative(ontop, floor)) ;
     No (more) solutions
 
 To test the command line program `shrdlite.pl` in SWI Prolog, you should 
 be able to do this:
 
-    swipl -q -g main,halt -s shrdlite.pl < ../ex1.json
+    swipl -q -g main,halt -s shrdlite.pl < ../medium.json
 
 More information about SWI Prolog can found here: 
 
@@ -199,7 +210,7 @@ There are no good grammar libraries for Java, so this version uses the
 Prolog grammar via the GNUPrologJava library. After compilation you can
 test the command line program like this:
 
-    java -cp gnuprologjava-0.2.6.jar:json-simple-1.1.1.jar:. Shrdlite < ../ex1.json
+    java -cp gnuprologjava-0.2.6.jar:json-simple-1.1.1.jar:. Shrdlite < ../medium.json
 
 Read more about the needed libraries here:
 
@@ -212,14 +223,14 @@ The Haskell grammar is of course written as a combinator parser,
 implemented as an *Applicative Functor* (McBride & Paterson, 2008).
 
     Prelude> :l Shrdlite.hs
-    Main> let sent = words "put the green ball in a box on the floor"
+    Main> let sent = words "put the white ball in a box on the floor"
     Main> mapM_ print $ parse command sent
-    Move (BasicEntity The (Block AnySize Green Ball)) (Relative Inside (RelativeEntity Any (Block AnySize AnyColor Box) (Relative Ontop Floor)))
-    Move (RelativeEntity The (Block AnySize Green Ball) (Relative Inside (BasicEntity Any (Block AnySize AnyColor Box)))) (Relative Ontop Floor)
+    Move (BasicEntity The (Object AnySize White Ball)) (Relative Inside (RelativeEntity Any (Object AnySize AnyColor Box) (Relative Ontop Floor)))
+    Move (RelativeEntity The (Object AnySize White Ball) (Relative Inside (BasicEntity Any (Object AnySize AnyColor Box)))) (Relative Ontop Floor)
 
 To test the command line program `Shrdlite.hs` just do this:
 
-    runhaskell Shrdlite.hs < ../ex1.json
+    runhaskell Shrdlite.hs < ../medium.json
 
 To be able to read and write JSON, you have to install Text.JSON:
 
