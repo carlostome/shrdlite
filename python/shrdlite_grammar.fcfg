@@ -3,7 +3,7 @@
 # >>> import nltk
 # >>> grammar = nltk.data.load("file:shrdlitegrammar.fcfg", cache=False)
 # >>> parser = nltk.FeatureChartParser(grammar)
-# >>> sentence = "put the green block in the small box on the floor ".split()
+# >>> sentence = "put the white ball in a box on the floor".split()
 # >>> for tree in parser.parse(sentence): 
 # ...     print tree.label()['sem']
 
@@ -20,15 +20,15 @@ location[sem=(relative,?Relation,?Entity)] -> relation[sem=?Relation] entity[sem
 
 entity[sem=floor] -> the_floor
 
-entity[sem=(basic_entity,?Quant,?Block)] -> quantifier[num=?Num,sem=?Quant] block[num=?Num,sem=?Block]
+entity[sem=(basic_entity,?Quant,?Object)] -> quantifier[num=?Num,sem=?Quant] object[num=?Num,sem=?Object]
 
-entity[sem=(relative_entity,?Quant,?Block,?Location)] -> quantifier[num=?Num,sem=?Quant] block[num=?Num,sem=?Block] opt_that_is[num=?Num] location[sem=?Location]
+entity[sem=(relative_entity,?Quant,?Object,?Location)] -> quantifier[num=?Num,sem=?Quant] object[num=?Num,sem=?Object] opt_that_is[num=?Num] location[sem=?Location]
 
-block[num=?Num,sem=(block,?Form,?Size,?Color)] -> size[sem=?Size] color[sem=?Color] form[num=?Num,sem=?Form]
-block[num=?Num,sem=(block,?Form,?Size,?Color)] -> color[sem=?Color] size[sem=?Size] form[num=?Num,sem=?Form]
-block[num=?Num,sem=(block,?Form,'-',  ?Color)] -> color[sem=?Color] form[num=?Num,sem=?Form]
-block[num=?Num,sem=(block,?Form,?Size,'-'   )] -> size[sem=?Size] form[num=?Num,sem=?Form]
-block[num=?Num,sem=(block,?Form,'-',  '-'   )] -> form[num=?Num,sem=?Form]
+object[num=?Num,sem=(object,?Form,?Size,?Color)] -> size[sem=?Size] color[sem=?Color] form[num=?Num,sem=?Form]
+object[num=?Num,sem=(object,?Form,?Size,?Color)] -> color[sem=?Color] size[sem=?Size] form[num=?Num,sem=?Form]
+object[num=?Num,sem=(object,?Form,'-',  ?Color)] -> color[sem=?Color] form[num=?Num,sem=?Form]
+object[num=?Num,sem=(object,?Form,?Size,'-'   )] -> size[sem=?Size] form[num=?Num,sem=?Form]
+object[num=?Num,sem=(object,?Form,'-',  '-'   )] -> form[num=?Num,sem=?Form]
 
 ## Lexical rules
 
@@ -45,11 +45,8 @@ relation[sem=ontop] -> "on" "top" "of" | "on"
 relation[sem=under] -> "under"
 relation[sem=inside] -> "inside" | "in" | "into"
 
-size[sem=small] -> "small"
-size[sem=medium] -> "medium" | "medium-sized"
+size[sem=small] -> "small" | "tiny"
 size[sem=large] -> "large" | "big"
-size[sem=wide] -> "wide"
-size[sem=tall] -> "tall"
 
 color[sem=black] -> "black"
 color[sem=white] -> "white"
@@ -58,18 +55,20 @@ color[sem=green] -> "green"
 color[sem=yellow] -> "yellow"
 color[sem=red] -> "red"
 
-form[num=sg,sem=anyblock] -> "block"
-form[num=pl,sem=anyblock] -> "blocks"
+form[num=sg,sem=anyform] -> "object" | "thing" | "form"
+form[num=pl,sem=anyform] -> "objects" | "things" | "forms"
+form[num=sg,sem=brick] -> "brick"
+form[num=pl,sem=brick] -> "bricks"
+form[num=sg,sem=plank] -> "plank"
+form[num=pl,sem=plank] -> "planks"
 form[num=sg,sem=ball] -> "ball"
 form[num=pl,sem=ball] -> "balls"
-form[num=sg,sem=box] -> "box"
-form[num=pl,sem=box] -> "boxes"
 form[num=sg,sem=pyramid] -> "pyramid"
 form[num=pl,sem=pyramid] -> "pyramids"
-form[num=sg,sem=rectangle] -> "rectangle"
-form[num=pl,sem=rectangle] -> "rectangles"
-form[num=sg,sem=square] -> "square"
-form[num=pl,sem=square] -> "squares"
+form[num=sg,sem=box] -> "box"
+form[num=pl,sem=box] -> "boxes"
+form[num=sg,sem=table] -> "table"
+form[num=pl,sem=table] -> "tables"
 
 ## Lexicon (without semantic content)
 

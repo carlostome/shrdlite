@@ -13,11 +13,11 @@ data Command = Take Entity | Put Location | Move Entity Location
 data Location = Relative Relation Entity
                 deriving (Eq, Ord, Show)
 
-data Entity = Floor | BasicEntity Quantifier Block | RelativeEntity Quantifier Block Location
+data Entity = Floor | BasicEntity Quantifier Object | RelativeEntity Quantifier Object Location
               deriving (Eq, Ord, Show)
 
-data Block = Block Size Color Form 
-             deriving (Eq, Ord, Show)
+data Object = Object Size Color Form 
+              deriving (Eq, Ord, Show)
 
 data Quantifier = The | Any | All
                   deriving (Eq, Ord, Show)
@@ -25,13 +25,13 @@ data Quantifier = The | Any | All
 data Relation = Beside | Leftof | Rightof | Above | Ontop | Under | Inside
                 deriving (Eq, Ord, Show)
 
-data Size = AnySize | Small | Medium | Large | Wide | Tall
+data Size = AnySize | Small | Large 
             deriving (Eq, Ord, Show)
 
 data Color = AnyColor | Black | White | Blue | Green | Yellow | Red
              deriving (Eq, Ord, Show)
 
-data Form = AnyBlock | Ball | Box | Pyramid | Rectangle | Square
+data Form = AnyForm | Brick | Plank | Ball | Pyramid | Box | Table
             deriving (Eq, Ord, Show)
 
 -- Grammar rules
@@ -50,16 +50,16 @@ location = Relative <$> relation <*> entity
 entity :: SParser Entity
 entity = Floor <$ theFloor
          <|>
-         numberAgreement (liftA2 BasicEntity <$> quantifier <*> block)
+         numberAgreement (liftA2 BasicEntity <$> quantifier <*> object)
          <|>
-         numberAgreement (liftA3 RelativeEntity <$> quantifier <*> block <*> relative_clause)
+         numberAgreement (liftA3 RelativeEntity <$> quantifier <*> object <*> relative_clause)
     where 
       relative_clause n = thatIs n *> location
 
-block :: Number -> SParser Block
-block n = Block <$> (size <|> pure AnySize) <*> (color <|> pure AnyColor) <*> form n
-          <|>
-          flip Block <$> color <*> size <*> form n
+object :: Number -> SParser Object
+object n = Object <$> (size <|> pure AnySize) <*> (color <|> pure AnyColor) <*> form n
+           <|>
+           flip Object <$> color <*> size <*> form n
 
 -- Lexical rules
 
@@ -79,11 +79,8 @@ relation = lexicon [(Beside,  ["beside"]),
                   (Inside,  ["inside", "in", "into"])]
 
 size :: SParser Size
-size = lexicon [(Small,  ["small"]),
-                (Medium, ["medium", "medium-sized"]),
-                (Large,  ["large", "big"]),
-                (Wide,   ["wide"]),
-                (Tall,   ["tall"])]
+size = lexicon [(Small,  ["small", "tiny"]),
+                (Large,  ["large", "big"])]
 
 color :: SParser Color
 color = lexicon [(Black,  ["black"]),
@@ -94,12 +91,13 @@ color = lexicon [(Black,  ["black"]),
                  (Red,    ["red"])]
 
 form :: Number -> SParser Form
-form n = lexicon [(AnyBlock,  [regNoun n "block"]),
-                  (Ball,      [regNoun n "ball"]),
-                  (Box,       [mkNoun  n "box" "boxes"]),
-                  (Pyramid,   [regNoun n "pyramid"]),
-                  (Rectangle, [regNoun n "rectangle"]),
-                  (Square,    [regNoun n "square"])]
+form n = lexicon [(AnyForm, [regNoun n "object", regNoun n "thing", regNoun n "form"]),
+                  (Brick,   [regNoun n "brick"]),
+                  (Plank,   [regNoun n "plank"]),
+                  (Ball,    [regNoun n "ball"]),
+                  (Pyramid, [regNoun n "pyramid"]),
+                  (Box,     [mkNoun  n "box" "boxes"]),
+                  (Table,   [regNoun n "table"])]
 
 -- Lexicon
 

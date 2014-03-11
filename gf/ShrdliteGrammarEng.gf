@@ -7,7 +7,7 @@ lincat
 
 Command = Utt;
 Entity = NP;
-Block = CN;
+Object = CN;
 Location = Adv;
 Quantifier = Det;
 Relation = Prep;
@@ -31,7 +31,7 @@ relative_entity q b l =
     mkNP q (mkCN b l)
   | mkNP q (mkCN b (mkRS (mkRCl E.that_RP l)));
 
-block f s c = 
+object f s c = 
     mkCN c (mkCN s f)
   | mkCN s (mkCN c f)
   | mkCN c f
@@ -52,11 +52,8 @@ ontop   = mkPrep "on top of" | mkPrep "on";
 under   = mkPrep "under";
 inside  = mkPrep "inside" | mkPrep "in" | mkPrep "into";
 
-small  = mkA "small";
-medium = mkA "medium" | mkA "medium-sized";
+small  = mkA "small" | mkA "tiny";
 large  = mkA "large" | mkA "big";
-wide   = mkA "wide";
-tall   = mkA "tall";
 
 black  = mkA "black";
 white  = mkA "white";
@@ -65,12 +62,13 @@ green  = mkA "green";
 yellow = mkA "yellow";
 red    = mkA "red";
 
-anyblock     = mkN "block";
-box       = mkN "box";
-pyramid   = mkN "pyramid";
-rectangle = mkN "rectangle";
-square    = mkN "square";
-ball      = mkN "ball";
+anyform = mkN "object" | mkN "thing" | mkN "form";
+brick   = mkN "brick";
+plank   = mkN "plank";
+ball    = mkN "ball";
+pyramid = mkN "pyramid";
+box     = mkN "box";
+table_  = mkN "table";
 
 oper
 

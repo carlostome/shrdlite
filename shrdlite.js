@@ -35,25 +35,24 @@ var Drop = 'drop';
 var SvgNS = 'http://www.w3.org/2000/svg';
 
 var BlockData = {
-    "rectangle": {"tall":   {"width":0.50, "height":1.00},
-                  "wide":   {"width":1.00, "height":0.50}
+    "brick":   {"small": {"width":0.30, "height":0.30},
+                "large": {"width":0.70, "height":0.60},
                  },
-    "ball":      {"small":  {"width":0.50, "height":0.50},
-                  "medium": {"width":0.75, "height":0.75},
-                  "large":  {"width":1.00, "height":1.00}
+    "plank":   {"small": {"width":0.60, "height":0.10},
+                "large": {"width":1.00, "height":0.15},
                  },
-    "square":    {"small":  {"width":0.50, "height":0.50},
-                  "medium": {"width":0.75, "height":0.75},
-                  "large":  {"width":1.00, "height":1.00}
+    "ball":    {"small": {"width":0.30, "height":0.30},
+                "large": {"width":0.70, "height":0.70},
                  },
-    "pyramid":   {"small":  {"width":0.50, "height":0.50},
-                  "medium": {"width":0.75, "height":0.75},
-                  "large":  {"width":1.00, "height":1.00}
+    "pyramid": {"small": {"width":0.60, "height":0.25},
+                "large": {"width":1.00, "height":0.40},
+               },
+    "box":     {"small": {"width":0.60, "height":0.30, "thickness": 0.10},
+                "large": {"width":1.00, "height":0.40, "thickness": 0.10},
+               },
+    "table":   {"small": {"width":0.60, "height":0.30, "thickness": 0.10},
+                "large": {"width":1.00, "height":0.40, "thickness": 0.10},
                  },
-    "box":       {"small":  {"width":0.50, "height":0.50},
-                  "medium": {"width":0.75, "height":0.75},
-                  "large":  {"width":1.00, "height":1.00}
-                 }
 };
 
 var ExampleWorlds;
@@ -282,8 +281,8 @@ function makeBlock(svg, blockid, stacknr, timeout) {
 
     var block;
     switch (attrs.form) {
-    case 'square':
-    case 'rectangle':
+    case 'brick':
+    case 'plank':
         block = $(SVG('rect')).attr({
             x: xleft, 
             y: ytop, 
@@ -300,7 +299,7 @@ function makeBlock(svg, blockid, stacknr, timeout) {
         });
         break;
     case 'pyramid':
-        var points = [xleft, ybottom, xcenter, ytop, xright, ybottom];
+        var points = [xleft, ybottom, xmidleft, ytop, xmidright, ytop, xright, ybottom];
         block = $(SVG('polygon')).attr({
             points: points.join(" ")
         });
@@ -309,6 +308,16 @@ function makeBlock(svg, blockid, stacknr, timeout) {
         var points = [xleft, ytop, xleft, ybottom, xright, ybottom, xright, ytop, 
                       xright-dim.thickness, ytop, xright-dim.thickness, ybottom-dim.thickness,
                       xleft+dim.thickness, ybottom-dim.thickness, xleft+dim.thickness, ytop];
+        block = $(SVG('polygon')).attr({
+            points: points.join(" ")
+        });
+        break;
+    case 'table':
+        var points = [xleft, ytop, xright, ytop, xright, ytop+dim.thickness, 
+                      xmidright, ytop+dim.thickness, xmidright, ybottom, 
+                      xmidright-dim.thickness, ybottom, xmidright-dim.thickness, ytop+dim.thickness,
+                      xmidleft+dim.thickness, ytop+dim.thickness, xmidleft+dim.thickness, ybottom,
+                      xmidleft, ybottom, xmidleft, ytop+dim.thickness, xleft, ytop+dim.thickness];
         block = $(SVG('polygon')).attr({
             points: points.join(" ")
         });
