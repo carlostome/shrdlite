@@ -22,7 +22,7 @@ var ArmSpeed = 1000;   // pixels per second
 // W3C Speech API currently works in Chrome and Safari,
 // but there is no way of setting male/female voice,
 // so this is one way of having different voices for user/system:
-var Voices = {"system": {"lang": "en-GB", "rate": 1.2}, // British English, slightly faster
+var Voices = {"system": {"lang": "en-GB", "rate": 1.1}, // British English, slightly faster
               "user": {"lang": "en-US"},  // American English
              };
 
@@ -95,6 +95,7 @@ $(function() {
 
 function loadExampleWorlds() {
     ExampleWorlds = {};
+    $("#exampleworlds").empty();
     $.each(ExampleNames, function(i, name) {
         $('<input type="submit">').val(name)
             .click(changeCurrentExample)
