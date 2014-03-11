@@ -10,15 +10,14 @@ var ExamplesFolder = "examples";
 var SystemPromptText = "What can I do for you today?";
 
 // Constants that you can play around with:
-var DialogueHistory = 100;// max nr. utterances
-var FloorThickness = 10; // pixels
-var BoxThickness = 0.1; // relative to stack width
-var BoxSpacing = 4;    // pixels
-var ArmSize = 20;     // pixels
-var ArmSpeed = 1000; // pixels per second
+var DialogueHistory = 100;    // max nr. utterances
+var FloorThickness = 10;     // pixels
+var WallSeparation = 4;     // pixels
+var ArmSize = 0.2;         // of stack width
 var AnimationPause = 0.1; // seconds
 var PromptPause = 0.5;   // seconds
 var AjaxTimeout = 5;    // seconds
+var ArmSpeed = 1000;   // pixels per second
 
 // W3C Speech API currently works in Chrome and Safari,
 // but there is no way of setting male/female voice,
@@ -45,13 +44,13 @@ var SvgNS = 'http://www.w3.org/2000/svg';
 var BlockData = {
     "brick":   {"small": {"width":0.30, "height":0.30},
                 "large": {"width":0.70, "height":0.60},
-                 },
+               },
     "plank":   {"small": {"width":0.60, "height":0.10},
                 "large": {"width":1.00, "height":0.15},
-                 },
+               },
     "ball":    {"small": {"width":0.30, "height":0.30},
                 "large": {"width":0.70, "height":0.70},
-                 },
+               },
     "pyramid": {"small": {"width":0.60, "height":0.25},
                 "large": {"width":1.00, "height":0.40},
                },
@@ -60,7 +59,7 @@ var BlockData = {
                },
     "table":   {"small": {"width":0.60, "height":0.30, "thickness": 0.10},
                 "large": {"width":1.00, "height":0.40, "thickness": 0.10},
-                 },
+               },
 };
 
 var ExampleWorlds;
@@ -71,6 +70,10 @@ var currentArmPosition;
 
 function stackWidth() {
     return CanvasWidth / currentWorld.world.length;
+}
+
+function boxSpacing() {
+    return Math.min(5, stackWidth() / 20);
 }
 
 $(function() {
@@ -85,7 +88,7 @@ $(function() {
     $('#showdebug').click(function(){
         $('#debug').toggle($('#showdebug').prop('checked'));
     });
-    CanvasWidth = $("#svgdiv").width();
+    CanvasWidth = $("#svgdiv").width() - 2 * WallSeparation;
     CanvasHeight = $("#svgdiv").height() - FloorThickness;
     loadExampleWorlds();
     resetCurrentExample(ExampleNames[0]);
@@ -136,29 +139,31 @@ function resetSVG() {
     sayUtterance("system", "Please wait while I populate the world.");
     $('#svgdiv').empty();
 
-    var viewBox = [0, 0, CanvasWidth, CanvasHeight + FloorThickness];
+    var viewBox = [0, 0, CanvasWidth + 2 * WallSeparation, CanvasHeight + FloorThickness];
     var svg = $(SVG('svg')).attr({
         viewBox: viewBox.join(' '), 
         width: viewBox[2], 
         height: viewBox[3],
     }).appendTo($('#svgdiv'));
 
+    // The floor:
     $(SVG('rect')).attr({
         x: 0,
         y: CanvasHeight,
-        width: CanvasWidth,
+        width: CanvasWidth + 2 * WallSeparation,
         height: CanvasHeight + FloorThickness,
         fill: 'black',
     }).appendTo(svg);
 
+    // The arm:
     $(SVG('line')).attr({
         id:'arm',
         x1: stackWidth() / 2,
-        y1: ArmSize - CanvasHeight, 
+        y1: ArmSize * stackWidth() - CanvasHeight, 
         x2: stackWidth() / 2, 
-        y2: ArmSize, 
+        y2: ArmSize * stackWidth(), 
         stroke: 'black', 
-        'stroke-width': ArmSize,
+        'stroke-width': ArmSize * stackWidth(),
     }).appendTo(svg);
 
     var timeout = 0;
@@ -202,8 +207,8 @@ function moveBlock(action, stackNr) {
     }
     var stack = currentWorld.world[stackNr];
     var arm = $('#arm');
-    var xStack = stackNr * stackWidth();
-    var xArm = currentArmPosition * stackWidth();
+    var xStack = stackNr * stackWidth() + WallSeparation;
+    var xArm = currentArmPosition * stackWidth() + WallSeparation;
 
     if (action == Pick) {
         if (!stack.length) {
@@ -214,8 +219,8 @@ function moveBlock(action, stackNr) {
     }
 
     var altitude = getAltitude(stack);
-    var blockHeight = getBlockDimensions(currentWorld.holding).height;
-    var yArm = CanvasHeight - altitude - ArmSize - blockHeight;
+    var blockHeight = getBlockDimensions(currentWorld.holding).heightadd;
+    var yArm = CanvasHeight - altitude - ArmSize * stackWidth() - blockHeight;
     var yStack = -altitude;
 
     var path1 = ["M", xArm, 0, "H", xStack, "V", yArm];
@@ -245,21 +250,15 @@ function moveBlock(action, stackNr) {
 function getBlockDimensions(blockid) {
     var attrs = currentWorld.blocks[blockid];
     var size = BlockData[attrs.form][attrs.size];
-    var width = size.width * (stackWidth() - BoxSpacing);
-    var height = size.height * (stackWidth() - BoxSpacing);
-    var boxThickness = width * BoxThickness;
-    boxThickness = Math.max(5, Math.min(boxThickness, stackWidth() / 5));
-    var heightadd = boxThickness;
-    if (attrs.form != 'box') {
-        width -= 2 * (boxThickness + BoxSpacing);
-        height -= 2 * (boxThickness + BoxSpacing);
-        heightadd = height;
-    }
+    var width = size.width * (stackWidth() - boxSpacing());
+    var height = size.height * (stackWidth() - boxSpacing());
+    var thickness = size.thickness * (stackWidth() - boxSpacing());
+    var heightadd = attrs.form == 'box' ? thickness : height;
     return {
         width: width,
         height: height,
         heightadd: heightadd,
-        thickness: boxThickness,
+        thickness: thickness,
     };
 }
 
@@ -268,7 +267,7 @@ function getAltitude(stack, blockid) {
     for (var i=0; i<stack.length; i++) {
         if (blockid == stack[i])
             break;
-        altitude += getBlockDimensions(stack[i]).heightadd + BoxSpacing;
+        altitude += getBlockDimensions(stack[i]).heightadd + boxSpacing();
     }
     return altitude;
 }
@@ -278,7 +277,7 @@ function makeBlock(svg, blockid, stacknr, timeout) {
     var altitude = getAltitude(currentWorld.world[stacknr], blockid);
     var dim = getBlockDimensions(blockid);
 
-    var ybottom = CanvasHeight;
+    var ybottom = CanvasHeight - boxSpacing();
     var ytop = ybottom - dim.height;
     var ycenter = (ybottom + ytop) / 2;
     var yradius = (ybottom - ytop) / 2;
@@ -286,6 +285,8 @@ function makeBlock(svg, blockid, stacknr, timeout) {
     var xright = xleft + dim.width;
     var xcenter = (xright + xleft) / 2;
     var xradius = (xright - xleft) / 2;
+    var xmidleft = (xcenter + xleft) / 2;
+    var xmidright = (xcenter + xright) / 2;
 
     var block;
     switch (attrs.form) {
@@ -334,12 +335,12 @@ function makeBlock(svg, blockid, stacknr, timeout) {
     block.attr({
         id: blockid,
         stroke: 'black', 
-        'stroke-width': 2, 
+        'stroke-width': boxSpacing() / 2, 
         fill: attrs.color, 
     });
     block.appendTo(svg);
 
-    var path = ["M", stacknr * stackWidth(), -(CanvasHeight + FloorThickness)];
+    var path = ["M", stacknr * stackWidth() + WallSeparation, -(CanvasHeight + FloorThickness)];
     animateMotion(block, path, 0, 0);
     path.push("V", -altitude);
     animateMotion(block, path, timeout, 0.5);
