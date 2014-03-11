@@ -90,7 +90,6 @@ $(function() {
     });
     CanvasWidth = $("#svgdiv").width() - 2 * WallSeparation;
     CanvasHeight = $("#svgdiv").height() - FloorThickness;
-    loadExampleWorlds();
     resetCurrentExample(ExampleNames[0]);
 });
 
@@ -120,6 +119,7 @@ function changeCurrentExample() {
 }
 
 function resetCurrentExample(name) {
+    loadExampleWorlds();
     currentExample = name;
     currentWorld = ExampleWorlds[currentExample];
     currentArmPosition = 0;
