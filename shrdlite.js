@@ -19,8 +19,11 @@ var PromptPause = 0.5;   // seconds
 var AjaxTimeout = 5;    // seconds
 var ArmSpeed = 1000;   // pixels per second
 
-// W3C Speech API currently works in Chrome and Safari,
-// but there is no way of setting male/female voice,
+// This only has effect in the latest versions of Chrome and Safari,
+// the only browsers that have implemented the W3C Web Speech API:
+var UseSpeech = true;
+
+// There is no way of setting male/female voice,
 // so this is one way of having different voices for user/system:
 var Voices = {"system": {"lang": "en-GB", "rate": 1.1}, // British English, slightly faster
               "user": {"lang": "en-US"},  // American English
@@ -429,6 +432,7 @@ function userInput() {
     var ajaxdata = {'world': currentWorld.world,
                     'objects': currentWorld.objects,
                     'holding': currentWorld.holding,
+                    'state': currentWorld.state,
                     'utterance': userinput.split(/\s+/)
                    };
 
@@ -449,6 +453,9 @@ function userInput() {
         }
         debugResult(result);
         sayUtterance("system", result.output);
+        if (result.state) {
+            currentWorld.state = result.state;
+        }
         currentPlan = result.plan;
         performPlan();
     });
@@ -463,7 +470,7 @@ function sayUtterance(participant, utterance, silent) {
         .text(utterance)
         .insertBefore($("#inputform"));
     dialogue.scrollTop(dialogue.prop("scrollHeight"));
-    if (!silent) {
+    if (UseSpeech && !silent) {
         try {
             // W3C Speech API (works in Chrome and Safari)
             var speech = new SpeechSynthesisUtterance(utterance);
@@ -487,6 +494,7 @@ function debugResult(result) {
     $("#debugtrees").html(result.trees ? result.trees.join("<br>") : "&mdash;");
     $("#debuggoals").html(result.goals ? result.goals.join("<br>") : "&mdash;");
     $("#debugplan").html(result.plan ? result.plan.join("<br>") : "&mdash;");
+    $("#debugstate").html(result.state ? JSON.stringify(result.state) : "&mdash;");
     $("#debugjson").text(JSON.stringify(result, null, " "));
 }
 
