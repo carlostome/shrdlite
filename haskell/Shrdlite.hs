@@ -11,11 +11,13 @@ import ShrdliteGrammar
 import CombinatorParser
 import Text.JSON
 import Data.List (findIndex)
-
+import qualified Data.Map  as M
+import Control.Monad (foldM, liftM)
+  
 type Utterance = [String]
 type Id = String
 type World = [[Id]]
-type Objects = JSObject JSValue
+type Objects = M.Map Id Object
 type Goal = Bool
 type Plan = [String]
 
@@ -27,10 +29,10 @@ main = getContents >>= putStrLn . encode . jsonMain . ok . decode
 jsonMain :: JSObject JSValue -> JSValue
 jsonMain jsinput = makeObj result
     where 
-      utterance = ok (valFromObj "utterance" jsinput) :: Utterance
-      world     = ok (valFromObj "world"     jsinput) :: World
-      holding   = ok (valFromObj "holding"   jsinput) :: Id
-      objects   = ok (valFromObj "objects"   jsinput) :: Objects
+      utterance = ok (valFromObj "utterance" jsinput)   :: Utterance
+      world     = ok (valFromObj "world"     jsinput)   :: World
+      holding   = ok (valFromObj "holding"   jsinput)   :: Id
+      objects   = ok (valFromObj "objects"   jsinput >>= parseObjects ) :: Objects
 
       trees     = parse command utterance :: [Command]
 
@@ -51,7 +53,23 @@ jsonMain jsinput = makeObj result
                    ("output",    showJSON output)
                   ]
 
-
+parseObjects :: JSObject JSValue -> Result Objects
+parseObjects = foldM (\m (id,JSObject o) -> readObj (fromJSObject o)
+                                            >>= \obj -> return $ M.insert id obj m) M.empty
+               . fromJSObject 
+  where
+    readObj :: [(String,JSValue)]-> Result Object
+    readObj object = do
+       form  <- liftM (read . fromJSString) $ look "form"   object 
+       color <- liftM (read . fromJSString) $ look "color"  object 
+       size  <- liftM (read . fromJSString) $ look "size"   object 
+       return $ Object  size color form
+                         
+look :: String -> [(String,JSValue)] -> Result JSString
+look s [] = fail "Not in list"
+look s ((x,JSString e):xs)
+       | s == x = return e
+       | otherwise = look s xs 
 interpret :: World -> Id -> Objects -> Command -> [Goal]
 interpret world holding objects tree = [True]
 
