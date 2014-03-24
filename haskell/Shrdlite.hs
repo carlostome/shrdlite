@@ -50,9 +50,11 @@ jsonMain jsinput = makeObj result
                    ("trees",     showJSON (map show trees)),
                    ("goals",     if length trees >= 1 then showJSON goals else JSNull),
                    ("plan",      if length goals == 1 then showJSON plan  else JSNull),
+                   ("world",     showJSON (show objects)),
                    ("output",    showJSON output)
                   ]
 
+-- | Parse JSON Object to real Object representation.
 parseObjects :: JSObject JSValue -> Result Objects
 parseObjects = foldM (\m (id,JSObject o) -> readObj (fromJSObject o)
                                             >>= \obj -> return $ M.insert id obj m) M.empty
@@ -60,16 +62,40 @@ parseObjects = foldM (\m (id,JSObject o) -> readObj (fromJSObject o)
   where
     readObj :: [(String,JSValue)]-> Result Object
     readObj object = do
-       form  <- liftM (read . fromJSString) $ look "form"   object 
-       color <- liftM (read . fromJSString) $ look "color"  object 
-       size  <- liftM (read . fromJSString) $ look "size"   object 
+       form  <- look "form"   object >>= toForm   . fromJSString
+       color <- look "color"  object >>= toColor  . fromJSString
+       size  <- look "size"   object >>= toSize   . fromJSString
        return $ Object  size color form
-                         
-look :: String -> [(String,JSValue)] -> Result JSString
-look s [] = fail "Not in list"
-look s ((x,JSString e):xs)
-       | s == x = return e
-       | otherwise = look s xs 
+      where
+        toForm form = case form of
+                        "anyform" -> return AnyForm
+                        "brick"   -> return Brick
+                        "plank"   -> return Plank
+                        "ball"    -> return Ball
+                        "pyramid" -> return Pyramid
+                        "box"     -> return Box
+                        "table"   -> return Table
+                        str       -> fail $ "Not a form: " ++ str
+        toColor col = case col of
+                        "anycolor" -> return AnyColor
+                        "black"    -> return Black
+                        "white"    -> return White
+                        "blue"     -> return Blue
+                        "green"    -> return Green
+                        "yellow"   -> return Yellow
+                        "red"      -> return Red
+                        str        -> fail $ "Not a color: " ++ str
+        toSize size = case size of
+                        "anysize" -> return AnySize
+                        "small"   -> return Small
+                        "large"   -> return Large
+                        str       -> fail $ "Not a size: " ++ str
+                                     
+
+        look str list = maybe (fail "Not in the list")
+                        (\(JSString s) -> return s) $ lookup str list 
+
+                     
 interpret :: World -> Id -> Objects -> Command -> [Goal]
 interpret world holding objects tree = [True]
 
