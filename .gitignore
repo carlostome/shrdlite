@@ -4,4 +4,3 @@
 *.o
 *.pyc
 __pycache__
-cgi-bin/ajaxwrapper.py

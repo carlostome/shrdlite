@@ -12,29 +12,9 @@ import CombinatorParser
 import Text.JSON
 import Data.List (findIndex)
 
-data Form =
-   Brick
- | Plank
- | Ball
- | Pyramid
- | Box
- | Table
-
-data Color =
-   Red
- | Black
- | Blue
- | Green
- | Yellow
- | White
-
-data Size = Large | Small
-
-data WorlObject = WObject Id Form Color Size
-
 type Utterance = [String]
 type Id = String
-type World = [[WorlObject]]
+type World = [[Id]]
 type Objects = JSObject JSValue
 type Goal = Bool
 type Plan = [String]
