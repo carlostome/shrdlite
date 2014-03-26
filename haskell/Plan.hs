@@ -1,4 +1,4 @@
-module Plan where
+module Plan (plan) where
 
 import DataTypes
 import ShrdliteGrammar
@@ -93,9 +93,10 @@ transition worldState action =
 					++ drop (n + 1) (world worldState))
 
 -- Bfs on the tree of worlds
-plan :: World -> Goal -> Maybe [Action]
-plan world goal = go [(world,[])] Set.empty
+plan :: World -> Maybe Id -> Objects -> Goal -> Maybe Plan
+plan world holding objects goal = go [(world,[])] Set.empty
   where
+  	initialWorld = WState holding undefined world objects
     go []                              = Nothing
     go [(world,actions):rest] visited
        | isSolution goal world         = Just actions

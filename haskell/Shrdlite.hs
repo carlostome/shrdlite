@@ -14,6 +14,7 @@ import Data.List (findIndex)
 import qualified Data.Map  as M
 import Data.Maybe (fromJust)
 import Control.Monad (foldM, liftM)
+import Plan
   
 import DataTypes
 
@@ -31,20 +32,21 @@ jsonMain jsinput = makeObj result
 
       trees     = parse command utterance :: [Command]
 
-      goals     = [] {- [goal | tree <- trees, goal <- interpret world holding objects tree] -} :: [Goal]
+      goals     = [goal | tree <- trees, goal <- interpret world holding objects tree] :: [Goal]
 
-      plan      = solve world holding objects (head goals) :: Plan
+      plan      = solve world holding objects (head goals) :: Maybe Plan
 
       output    = if null trees then "Parse error!"
                   else if null goals then "Interpretation error!"
                        else if length goals >= 2 then "Ambiguity error!"
-                            else if null plan then "Planning error!"
+                            else if isNothing plan then "Planning error!"
                                  else "Success!"
 
       result    = [("utterance", showJSON utterance),
                    ("trees",     showJSON (map show trees)),
                    ("goals",     if length trees >= 1 then showJSON (show goals) else JSNull),
-                   ("plan",      if length goals == 1 then showJSON plan  else JSNull),
+                   ("plan",      if isJust plan && length goals == 1 then showJSON (map show $ fromJust plan)
+				   				 else JSNull),
                    ("world",     showJSON (show objects)),
                    ("output",    showJSON output)
                   ]
@@ -137,11 +139,8 @@ interpret world holding objects tree =
     findEntities Floor                                = ["Floor"]
     filterByLocation location objects = undefined
 
-solve :: World -> Id -> Objects -> Goal -> Plan
-solve world holding objects goal = ["I picked it up . . .", "pick " ++ show col, ". . . and I dropped it down", "drop " ++ show col]
-    where
-      Just col = findIndex (not . null) world
-
+solve :: World -> Maybe Id -> Objects -> Goal -> Maybe Plan
+solve world holding objects goal = plan world holding objects goal
 
 ok :: Result a -> a
 ok (Ok res) = res
