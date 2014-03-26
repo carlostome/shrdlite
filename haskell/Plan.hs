@@ -74,8 +74,24 @@ isSolution goal worldState =
 
 -- Apply an action to a world and get a new world
 transition :: WorldState -> Action -> WorldState
-transition = undefined
-          
+transition worldState action =
+	case action of
+		Take n ->
+			let id = head (n !! world worldState) in
+				WState
+					(Just id)
+					(positions worldState)
+					(take n (world worldState) ++ [tail (n !! world worldState)]
+						++ drop (n + 1) $ world worldState)
+		Drop n -> 
+			let Just id = holding worldState in
+				WState
+					Nothing
+					(insert id (n, length $ n!!world worldState) (positions worldState)
+					take n (world worldState)
+					++ [id:head $ drop n $ world worldState])
+					++ drop (n + 1) (world worldState))
+
 -- Bfs on the tree of worlds
 plan :: World -> Goal -> Maybe [Action]
 plan world goal = go [(world,[])] Set.empty
