@@ -1,0 +1,18 @@
+{ 
+    "world": [["e"],[],[],["k"],[]],
+    "holding": null,
+    "objects": {
+        "e": { "form":"ball",    "size":"large",  "color":"white" },
+        "k": { "form":"box",     "size":"large",  "color":"yellow"}
+    },
+    "utterance": 
+        ["put","the","white","ball","in","a","box"],
+    "examples": [
+        ["put","the","white","ball","in","a","box","on","the","floor"],
+        ["put","the","black","ball","in","a","box","on","the","floor"],
+        ["take","a","blue","object"],
+        ["take","the","white","ball"],
+        ["put","all","boxes","on","the","floor"],
+        ["move","all","balls","inside","a","large","box"]
+    ]
+}
