@@ -16,7 +16,7 @@ from subprocess import Popen, PIPE, STDOUT
 
 # Haskell
 SCRIPTDIR = 'haskell'
-SCRIPT = ['/usr/bin/runhaskell', 'Shrdlite.hs']
+SCRIPT = ['/usr/local/bin/runhaskell', 'Shrdlite.hs']
 
 # # Python
 # SCRIPTDIR = 'python'

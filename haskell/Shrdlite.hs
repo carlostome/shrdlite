@@ -12,6 +12,7 @@ import CombinatorParser
 import Text.JSON
 import Data.List (findIndex)
 import qualified Data.Map  as M
+import Data.Maybe (fromJust)
 import Control.Monad (foldM, liftM)
   
 type Utterance = [String]
@@ -36,6 +37,7 @@ jsonMain jsinput = makeObj result
 
       trees     = parse command utterance :: [Command]
 
+      entities  = identifyEntities
       goals     = [goal | tree <- trees, goal <- interpret world holding objects tree] :: [Goal]
 
       plan      = solve world holding objects (head goals) :: Plan
@@ -66,39 +68,37 @@ parseObjects = foldM (\m (id,JSObject o) -> readObj (fromJSObject o)
        color <- look "color"  object >>= toColor  . fromJSString
        size  <- look "size"   object >>= toSize   . fromJSString
        return $ Object  size color form
-      where
-        toForm form = case form of
-                        "anyform" -> return AnyForm
-                        "brick"   -> return Brick
-                        "plank"   -> return Plank
-                        "ball"    -> return Ball
-                        "pyramid" -> return Pyramid
-                        "box"     -> return Box
-                        "table"   -> return Table
-                        str       -> fail $ "Not a form: " ++ str
-        toColor col = case col of
-                        "anycolor" -> return AnyColor
-                        "black"    -> return Black
-                        "white"    -> return White
-                        "blue"     -> return Blue
-                        "green"    -> return Green
-                        "yellow"   -> return Yellow
-                        "red"      -> return Red
-                        str        -> fail $ "Not a color: " ++ str
-        toSize size = case size of
-                        "anysize" -> return AnySize
-                        "small"   -> return Small
-                        "large"   -> return Large
-                        str       -> fail $ "Not a size: " ++ str
-                                     
 
-        look str list = maybe (fail "Not in the list")
-                        (\(JSString s) -> return s) $ lookup str list 
+    toForm form = case form of
+                    "anyform" -> return AnyForm
+                    "brick"   -> return Brick
+                    "plank"   -> return Plank
+                    "ball"    -> return Ball
+                    "pyramid" -> return Pyramid
+                    "box"     -> return Box
+                    "table"   -> return Table
+                    str       -> fail $ "Not a form: " ++ str
+    toColor col = case col of
+                    "anycolor" -> return AnyColor
+                    "black"    -> return Black
+                    "white"    -> return White
+                    "blue"     -> return Blue
+                    "green"    -> return Green
+                    "yellow"   -> return Yellow
+                    "red"      -> return Red
+                    str        -> fail $ "Not a color: " ++ str
+    toSize size = case size of
+                    "anysize" -> return AnySize
+                    "small"   -> return Small
+                    "large"   -> return Large
+                    str       -> fail $ "Not a size: " ++ str
+                                     
+    look str list = maybe (fail "Not in the list")
+                    (\(JSString s) -> return s) $ lookup str list 
 
                      
 interpret :: World -> Id -> Objects -> Command -> [Goal]
 interpret world holding objects tree = [True]
-
 
 solve :: World -> Id -> Objects -> Goal -> Plan
 solve world holding objects goal = ["I picked it up . . .", "pick " ++ show col, ". . . and I dropped it down", "drop " ++ show col]
