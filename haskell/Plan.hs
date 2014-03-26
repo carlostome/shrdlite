@@ -1,13 +1,23 @@
 module Plan where
 
-import Data.Set as Set
-import Data.Hashable as Hash
+import DataTypes
+import qualified Data.Set as Set
+import qualified Data.Hashable as Hash
 
 isSolution :: Goal -> World -> Bool
 isSolution = undefined
 
-actions :: World -> [Action]
-actions = undefined
+
+-- | Finds all the numbers of the stacks with elements.
+stacksWithElements :: WorldState -> [Integer]
+stacksWithElements (_, world) = map (\(s,n) -> n) $ filter (\(s, n) -> length s > 0) $ zip world [1..]
+
+actions :: WorldState -> [Action]
+actions (Nothing, world) = map Take stacksWithElements
+actions (Just, world)    = map Drop [1..numberOfColumns] ++ map Take stacksWithElements
+  where
+    numberOfColumns = length world
+
 
 transition :: World -> Action -> World
 transition = undefined

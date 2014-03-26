@@ -15,13 +15,7 @@ import qualified Data.Map  as M
 import Data.Maybe (fromJust)
 import Control.Monad (foldM, liftM)
   
-type Utterance = [String]
-type Id = String
-type World = [[Id]]
-type Objects = M.Map Id Object
-data Goal = MoveObj Id Relation Id | TakeObj Id deriving (Eq, Show)
-type Plan = [String]
-
+import DataTypes
 
 main :: IO ()
 main = getContents >>= putStrLn . encode . jsonMain . ok . decode
