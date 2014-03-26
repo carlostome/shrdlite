@@ -20,7 +20,7 @@ type Utterance = [String]
 type Id = String
 type World = [[Id]]
 type Objects = M.Map Id Object
-data Goal = MoveObj Id Id | TakeObj Id | PutObj Id 
+data Goal = MoveObj Id Relation Id | TakeObj Id 
 type Plan = [String]
 
 
@@ -126,19 +126,18 @@ data Entity   = Floor
 interpret :: World -> Id -> Objects -> Command -> [Goal]
 interpret world holding objects tree = 
   case tree of
-    Take entity          -> map (TakeObj) $ findEntities entity
-    Put location         -> map (PutObj) $ findLocations location
-    Move entity location -> 
-      (findEntities entity) ** (findLocations location)
-      
+    Take entity                               -> map (TakeObj) $ findEntities entity
+    Put (Relative relation entity)            -> map (MoveObj "" relation) $ findEntities entity
+    Move entity (Relative relation entity')   -> (findEntities entity) ** (findEntities entity')
+      where
+        [] ** _          = []
+        _ ** []          = []
+        (x:xs) ** ys     = map (createGoal x) ys ++ (xs ** ys)
+          where
+            createGoal x y = MoveObj x relation y
   where
     findEntities = undefined
     findLocations = undefined
-    [] ** _          = []
-    _ ** []          = []
-    (x:xs) ** ys     = map (createGoal x) ys ++ (xs ** ys)
-      where
-        createGoal x y = MoveObj x y
 
 solve :: World -> Id -> Objects -> Goal -> Plan
 solve world holding objects goal = ["I picked it up . . .", "pick " ++ show col, ". . . and I dropped it down", "drop " ++ show col]
