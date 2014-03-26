@@ -1,13 +1,17 @@
 module Plan where
 
 import DataTypes
+import ShrdliteGrammar
 import qualified Data.Set as Set
 import qualified Data.Hashable as Hash
+import qualified Data.Map as M
+import Data.Maybe
 
 data Action = Drop Int | Take Int
 data WorldState = WState { holding :: Maybe Id,
-                           positions :: Map Id (Int, Int),
-			   world :: World
+                           positions :: M.Map Id (Int, Int),
+                           world :: World,
+                           objectsInfo :: M.Map Id Object
 			 }
 
 -- | Finds all the numbers of the stacks with elements.
@@ -16,26 +20,33 @@ stacksWithElements (_, world) = map snd $ filter (\(s, n) -> length s > 0) $ zip
 
 -- | Calculates all the possible actions to take in the current world.
 actions :: WorldState -> [Action]
-actions (Nothing, world) = map Take stacksWithElements
-actions (Just currentObj, world)  = map Drop validStacksToDropOn
+actions (WState Nothing _ world info)            = map Plan.Take stacksWithElements
+actions (WState (Just currentObj) _ world info)  = map Plan.Drop validStacksToDropOn
   where
-    numberOfColumns = length world
     validStacksToDropOn = map snd $ filter (\(item, n) -> currentObj `canBeOn` n) $ zip (map head world) [1..]
     canBeOn _ "Floor" = True
-    canBeOn id id2 | isBall id  = isBox id2 -- Or is floor, but that's checked beforehand
+    canBeOn id id2 | id `isLargerThan` id2 = False
+                   | isBall id  = isBox id2 -- Or is floor, but that's checked beforehand
                    | isBall id2 = False
-                   | id `isLargerThan` id2 = False
-                   | isBox id2  = not isPiramid id || not isPlank id || id2 `isLargerThan` id
-                   | isBox id   = ((isTable id2 || isPlank id2) && id `sameSize` id2) || (isLarge id && isBrick id2 && isLarge id2)
+                   | isBox id2  = not isPyramid id || not isPlank id || id2 `isLargerThan` id
+                   | isBox id   = id `sameSize` id2 && (isTable id2 || isPlank id2 || (isLarge id && isBrick id2))
                    | otherwise = True
-    isBall id = undefined
-    isBrick id = undefined
-    isPiramid id = undefined
-    isPlank id = undefined
-    isBox id = undefined
-    isLargerThan = undefined
-    sameSize = undefined
-    isLarge = undefined
+
+    isBall id = getForm id == Ball  
+    isBrick id = getForm id == Brick
+    isPyramid id = getForm id == Pyramid
+    isPlank id = getForm id == Plank
+    isBox id = getForm id == Box
+    isTable id = getForm id == Table
+    isLargerThan id id2 = go (getSize id) (getSize id2)
+      where
+        go Small _   = False
+        go Large sz2 = sz2 == Small
+    sameSize id id2 = getSize id == getSize id2
+    isLarge id = getSize id == Large
+    getObject id = fromJust $ M.lookup id info
+    getForm id = let (Object _ _ form) = getObject id in form
+    getSize id = let (Object sz _ _ )  = getObject id in sz
 
 
 -- Checks if a given world satisfies a world
@@ -53,8 +64,8 @@ isSolution goal worldState =
 					Ontop -> y1 - y2 == 1
 					Inside -> y1 - y2 == 1
 					Under -> y1 < y2
-				where Just (x1, y1) = lookup id (positions worldState)
-					  Just (x2, y2) = lookup id2 (positions worldState)
+			          where Just (x1, y1) = lookup id (positions worldState)
+					Just (x2, y2) = lookup id2 (positions worldState)
 		TakeObj id -> 
 			case holding worldState of
 				Just id2 -> id1 == id2
