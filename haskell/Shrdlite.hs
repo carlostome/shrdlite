@@ -14,7 +14,6 @@ import Data.List (findIndex)
 import qualified Data.Map  as M
 import Data.Maybe (fromJust)
 import Control.Monad (foldM, liftM)
-import Data.Maybe
   
 type Utterance = [String]
 type Id = String
@@ -125,7 +124,7 @@ data Entity   = Floor
 interpret :: World -> Id -> Objects -> Command -> [Goal]
 interpret world holding objects tree = 
   case tree of
-    Take entity                               -> map (TakeObj) $ findEntities entity
+    Take entity                               -> map TakeObj $ findEntities entity
     Put (Relative relation entity)            -> map (MoveObj "" relation) $ findEntities entity
     Move entity (Relative relation entity')   -> (findEntities entity) ** (findEntities entity')
       where
@@ -135,8 +134,8 @@ interpret world holding objects tree =
           where
             createGoal x y = MoveObj x relation y
   where
-    findEntities = undefined
-    findLocations = undefined
+    findEntities (BasicEntity _ queryObj) = findObjects queryObj world objects 
+    findEntities _                        = undefined
 
 solve :: World -> Id -> Objects -> Goal -> Plan
 solve world holding objects goal = ["I picked it up . . .", "pick " ++ show col, ". . . and I dropped it down", "drop " ++ show col]
