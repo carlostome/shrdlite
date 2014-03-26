@@ -26,8 +26,7 @@ actions (Just currentObj, world)  = map Drop validStacksToDropOn
                    | isBall id2 = False
                    | id `isLargerThan` id2 = False
                    | isBox id2  = not isPiramid id || not isPlank id || id2 `isLargerThan` id
-                   | isBox id   = (isBox id2 && id `sameSize` id2) || (isLarge id && isBrick id2 && isLarge id2)
-                   -- Last physical law
+                   | isBox id   = ((isTable id2 || isPlank id2) && id `sameSize` id2) || (isLarge id && isBrick id2 && isLarge id2)
                    | otherwise = True
     isBall id = undefined
     isBrick id = undefined
