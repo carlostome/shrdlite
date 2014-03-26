@@ -3,4 +3,5 @@
 *.hi
 *.o
 *.pyc
+*.swp
 __pycache__
