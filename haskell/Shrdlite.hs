@@ -20,7 +20,7 @@ type Utterance = [String]
 type Id = String
 type World = [[Id]]
 type Objects = M.Map Id Object
-data Goal = MoveObj Id Relation Id | TakeObj Id 
+data Goal = MoveObj Id Relation Id | TakeObj Id deriving (Eq, Show)
 type Plan = [String]
 
 
@@ -38,7 +38,7 @@ jsonMain jsinput = makeObj result
 
       trees     = parse command utterance :: [Command]
 
-      goals     = [goal | tree <- trees, goal <- interpret world holding objects tree] :: [Goal]
+      goals     = [] {- [goal | tree <- trees, goal <- interpret world holding objects tree] -} :: [Goal]
 
       plan      = solve world holding objects (head goals) :: Plan
 
@@ -50,7 +50,7 @@ jsonMain jsinput = makeObj result
 
       result    = [("utterance", showJSON utterance),
                    ("trees",     showJSON (map show trees)),
-                   ("goals",     if length trees >= 1 then showJSON goals else JSNull),
+                   ("goals",     if length trees >= 1 then showJSON (show goals) else JSNull),
                    ("plan",      if length goals == 1 then showJSON plan  else JSNull),
                    ("world",     showJSON (show objects)),
                    ("output",    showJSON output)
