@@ -12,7 +12,7 @@ import CombinatorParser
 import Text.JSON
 import Data.List (findIndex)
 import qualified Data.Map  as M
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, isNothing, isJust)
 import Control.Monad (foldM, liftM)
 import Plan
   
@@ -27,7 +27,7 @@ jsonMain jsinput = makeObj result
     where 
       utterance = ok (valFromObj "utterance" jsinput)   :: Utterance
       world     = ok (valFromObj "world"     jsinput)   :: World
-      holding   = ok (valFromObj "holding"   jsinput)   :: Id
+      holding   = ok (valFromObj "holding"   jsinput >>= parseId )      :: Maybe Id
       objects   = ok (valFromObj "objects"   jsinput >>= parseObjects ) :: Objects
 
       trees     = parse command utterance :: [Command]
@@ -45,12 +45,17 @@ jsonMain jsinput = makeObj result
       result    = [("utterance", showJSON utterance),
                    ("trees",     showJSON (map show trees)),
                    ("goals",     if length trees >= 1 then showJSON (show goals) else JSNull),
-                   ("plan",      if isJust plan && length goals == 1 then showJSON (map show $ fromJust plan)
-				   				 else JSNull),
+                   ("plan",      if isJust plan && length goals == 1 then showJSON plan
+				 else showJSON (Nothing :: Maybe Plan)),
                    ("world",     showJSON (show objects)),
                    ("output",    showJSON output)
                   ]
 
+-- | Parse a JSValue to a Maybe Id
+parseId :: JSValue -> Result (Maybe Id)
+parseId JSNull = return Nothing
+parseId (JSString str) = return . return . fromJSString $ str
+          
 -- | Parse JSON Object to real Object representation.
 parseObjects :: JSObject JSValue -> Result Objects
 parseObjects = foldM (\m (id,JSObject o) -> readObj (fromJSObject o)
@@ -121,11 +126,17 @@ data Entity   = Floor
               | RelativeEntity Quantifier Object Location
 -}
 
-interpret :: World -> Id -> Objects -> Command -> [Goal]
+interpret :: World -> Maybe Id -> Objects -> Command -> [Goal]
 interpret world holding objects tree = 
   case tree of
-    Take entity                               -> map TakeObj $ findEntities entity
-    Put (Relative relation entity)            -> map (MoveObj "" relation) $ findEntities entity
+    Take entity                    ->
+      case holding of
+        Nothing -> map TakeObj $ findEntities entity
+        Just _  -> []
+    Put (Relative relation entity) ->
+      case holding of
+        Nothing -> []
+        Just id -> map (MoveObj id relation) $ findEntities entity
     Move entity (Relative relation entity')   -> (findEntities entity) ** (findEntities entity')
       where
         [] ** _          = []
@@ -135,12 +146,13 @@ interpret world holding objects tree =
             createGoal x y = MoveObj x relation y
   where
     findEntities (BasicEntity _ queryObj)             = findObjects queryObj world objects
-    findEntities (RelativeEntity _ queryObj location) = filterByLocation location $ findObjects queryObj
+    findEntities (RelativeEntity _ queryObj location) = filterByLocation location
+                                                        $ findObjects queryObj
     findEntities Floor                                = ["Floor"]
-    filterByLocation location objects = undefined
+    filterByLocation location objects                 = undefined
 
 solve :: World -> Maybe Id -> Objects -> Goal -> Maybe Plan
-solve world holding objects goal = plan world holding objects goal
+solve  = plan 
 
 ok :: Result a -> a
 ok (Ok res) = res

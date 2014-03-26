@@ -7,13 +7,14 @@ import           ShrdliteGrammar
 import qualified Data.Map        as M
 import qualified Data.Set        as S
 
-import qualified Data.Hashable   as H
+import           Data.Hashable   
 import           GHC.Generics    (Generic)
 
 import           Data.Maybe      (fromJust, isJust, isNothing)
 
 -- | Action that can be performed.
 data Action = DropA Int | TakeA Int
+
 
 instance Show Action where
   show (DropA n) = "drop " ++ show n
@@ -26,7 +27,9 @@ data WorldState = WState { holding     :: Maybe Id,
                            objectsInfo :: M.Map Id Object
 			 } deriving (Generic)
 
-instance H.Hashable WorldState where
+instance Hashable WorldState where
+  hashWithSalt s (WState holding _ world _) = s `hashWithSalt` holding
+                                              `hashWithSalt` world
 
 
 -- | Calculates all the possible actions to take in the current world.
@@ -38,8 +41,10 @@ actions (WState Nothing _ world info)            = map TakeA stacksWithElements
 
 actions (WState (Just currentObj) _ world info)  = map DropA validStacksToDropOn
   where
-    validStacksToDropOn = map snd $ filter (\(item, n) -> currentObj `canBeOn` n)
-                          $ zip (map headOrFloor world) [1..]
+    validStacksToDropOn :: [Int]
+    validStacksToDropOn = map snd $ filter (\(item, n) -> currentObj `canBeOn` item) $ 
+      zip (map headOrFloor world) [1..]
+
     canBeOn _ "Floor" = True
     canBeOn id id2 | id `isLargerThan` id2 = False
                    | isBall id  = isBox id2 -- Or is floor, but that's checked beforehand
@@ -117,18 +122,20 @@ transition worldState action =
 plan :: World -> Maybe Id -> Objects -> Goal -> Maybe Plan
 plan world holding objects goal = go [(initialWorld,[])] S.empty
   where
-  	initialWorld = WState holding undefined world objects
-
+  	initialWorld     = WState holding initialPositions world objects
+        -- FAKE
+        initialPositions = M.fromList [("e",(0,1)),("k",(3,1))]
+          
         go []  _                          = Nothing
         go ((world,oldActions):rest) visited
           | isSolution goal world         = Just (map show oldActions)
           | otherwise = go (rest ++ newWorlds) newVisited
           where
-            newWorlds     =  filter (\(w,_) -> H.hash w `S.notMember` visited)
+            newWorlds     =  filter (\(w,_) -> hash w `S.notMember` visited)
                              $ zip (map (transition world)        newActions)
                                    (map ((oldActions++) . return) newActions)
 
-            newVisited    = foldl (\v (w,_) -> S.insert (H.hash w) v) visited newWorlds
+            newVisited    = foldl (\v (w,_) -> S.insert (hash w) v) visited newWorlds
             newActions    = actions world
 
 

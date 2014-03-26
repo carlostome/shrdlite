@@ -1,8 +1,8 @@
-
+{-# LANGUAGE DeriveGeneric #-}
 module ShrdliteGrammar where
 
 import CombinatorParser
-
+  
 type SParser = Parser String
 
 -- Data types
@@ -34,6 +34,7 @@ data Color = AnyColor | Black | White | Blue | Green | Yellow | Red
 data Form = AnyForm | Brick | Plank | Ball | Pyramid | Box | Table
             deriving (Eq, Ord, Show)
 
+  
 -- Grammar rules
 
 command :: SParser Command
