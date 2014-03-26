@@ -3,10 +3,13 @@ module Plan where
 import Data.Set as Set
 import Data.Hashable as Hash
 
+type State = (Maybe Id,World)
+
+data Action = Pick Int | Drop Int 
 isSolution :: Goal -> World -> Bool
 isSolution = undefined
 
-actions :: World -> [Action]
+actions :: (Maybe Id,World) -> [Action]
 actions = undefined
 
 transition :: World -> Action -> World
