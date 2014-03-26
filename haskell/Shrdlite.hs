@@ -14,12 +14,13 @@ import Data.List (findIndex)
 import qualified Data.Map  as M
 import Data.Maybe (fromJust)
 import Control.Monad (foldM, liftM)
+import Data.Maybe
   
 type Utterance = [String]
 type Id = String
 type World = [[Id]]
 type Objects = M.Map Id Object
-type Goal = Bool
+data Goal = MoveObj Id Id | TakeObj Id | PutObj Id 
 type Plan = [String]
 
 
@@ -96,9 +97,48 @@ parseObjects = foldM (\m (id,JSObject o) -> readObj (fromJSObject o)
     look str list = maybe (fail "Not in the list")
                     (\(JSString s) -> return s) $ lookup str list 
 
-                     
+
+
+(~==) :: Object -> Object -> Bool
+(~==) = undefined
+    
+-- | Finds all the objects matching a given description.
+findObjects :: Object -> World -> Objects -> [Id]
+findObjects _ []       objInfo  = []
+findObjects objQ (x:xs) objInfo = searchInStack objQ x ++ findObjects objQ xs objInfo
+  where
+    searchInStack _              [] = []
+    searchInStack queryObj (objId:xs) = 
+      if queryObj ~== (fromJust $ M.lookup objId objInfo)
+        then objId : searchInStack queryObj xs
+        else searchInStack queryObj xs 
+
+{- 
+data Command  = Take Entity | Put Location | Move Entity Location
+
+data Location = Relative Relation Entity
+
+data Entity   = Floor 
+              | BasicEntity Quantifier Object 
+              | RelativeEntity Quantifier Object Location
+-}
+
 interpret :: World -> Id -> Objects -> Command -> [Goal]
-interpret world holding objects tree = [True]
+interpret world holding objects tree = 
+  case tree of
+    Take entity          -> map (TakeObj) $ findEntities entity
+    Put location         -> map (PutObj) $ findLocations location
+    Move entity location -> 
+      (findEntities entity) ** (findLocations location)
+      
+  where
+    findEntities = undefined
+    findLocations = undefined
+    [] ** _          = []
+    _ ** []          = []
+    (x:xs) ** ys     = map (createGoal x) ys ++ (xs ** ys)
+      where
+        createGoal x y = MoveObj x y
 
 solve :: World -> Id -> Objects -> Goal -> Plan
 solve world holding objects goal = ["I picked it up . . .", "pick " ++ show col, ". . . and I dropped it down", "drop " ++ show col]
