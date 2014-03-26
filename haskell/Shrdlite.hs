@@ -98,8 +98,12 @@ parseObjects = foldM (\m (id,JSObject o) -> readObj (fromJSObject o)
 
 
 (~==) :: Object -> Object -> Bool
-(~==) = undefined
-    
+(Object sz1 c1 f1) ~== (Object sz2 c2 f2) = (cmpSz sz1 sz2) && (cmpCol c1 c2) && (cmpForm f1 f2)
+  where
+    cmpSz s1 s2   = s1 == AnySize || s2 == AnySize || s1 == s2
+    cmpCol c1 c2  = c1 == AnyColor || c2 == AnyColor || c2 == c2
+    cmpForm f1 f2 = f1 == AnyForm || f2 == AnyForm || f1 == f2
+     
 -- | Finds all the objects matching a given description.
 findObjects :: Object -> World -> Objects -> [Id]
 findObjects _ []       objInfo  = []
@@ -134,7 +138,7 @@ interpret world holding objects tree =
           where
             createGoal x y = MoveObj x relation y
   where
-    findEntities (BasicEntity _ queryObj) = findObjects queryObj world objects 
+    findEntities (BasicEntity _ queryObj) = findObjects queryObj world objects
     findEntities _                        = undefined
 
 solve :: World -> Id -> Objects -> Goal -> Plan
