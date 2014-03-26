@@ -38,7 +38,6 @@ jsonMain jsinput = makeObj result
 
       trees     = parse command utterance :: [Command]
 
-      entities  = identifyEntities
       goals     = [goal | tree <- trees, goal <- interpret world holding objects tree] :: [Goal]
 
       plan      = solve world holding objects (head goals) :: Plan
