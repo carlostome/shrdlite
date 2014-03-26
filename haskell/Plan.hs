@@ -5,10 +5,10 @@ import qualified Data.Set as Set
 import qualified Data.Hashable as Hash
 
 data Action = Drop Int | Take Int
-
-isSolution :: Goal -> World -> Bool
-isSolution = undefined
-
+data WorldState = WState { holding :: Maybe Id,
+                           positions :: Map Id (Int, Int),
+			   world :: World
+			 }
 
 -- | Finds all the numbers of the stacks with elements.
 stacksWithElements :: WorldState -> [Integer]
@@ -39,10 +39,33 @@ actions (Just currentObj, world)  = map Drop validStacksToDropOn
     isLarge = undefined
 
 
+-- Checks if a given world satisfies a world
+isSolution :: Goal -> WorldState -> Bool
+isSolution goal worldState =
+	case goal of
+		MoveObj id rel id2 ->
+			if isJust (holding worldState) then False
+			else
+				case rel of
+					Beside -> abs (pos1 - pos2) == 1
+					Leftof -> x1 < x2
+					Rightof -> x1 > x2
+					Above -> y1 > y2
+					Ontop -> y1 - y2 == 1
+					Inside -> y1 - y2 == 1
+					Under -> y1 < y2
+				where Just (x1, y1) = lookup id (positions worldState)
+					  Just (x2, y2) = lookup id2 (positions worldState)
+		TakeObj id -> 
+			case holding worldState of
+				Just id2 -> id1 == id2
+				Nothing -> False
 
-transition :: World -> Action -> World
+-- Apply an action to a world and get a new world
+transition :: WorldState -> Action -> WorldState
 transition = undefined
           
+-- Bfs on the tree of worlds
 plan :: World -> Goal -> Maybe [Action]
 plan world goal = go [(world,[])] Set.empty
   where
@@ -52,4 +75,4 @@ plan world goal = go [(world,[])] Set.empty
        | otherwise = go $ rest ++ (filterVisited . mapActions . actions) world
        where
          filterVisited = filter (\(w,a) -> Hash.hash w `Set.notMember` visited)
-         mapActions    = map (\a -> (transition world act,actions ++ [act]))
+         mapActions    = map (\act -> (transition world act,actions ++ [act]))
