@@ -9,6 +9,7 @@ import Data.Maybe
 
 
 data Action = DropA Int | TakeA Int
+  deriving Show
             
 data WorldState = WState { holding :: Maybe Id,
                            positions :: M.Map Id (Int, Int),
@@ -27,7 +28,9 @@ actions :: WorldState -> [Action]
 actions ws@(WState Nothing _ world info)         = map TakeA (stacksWithElements ws)
 actions (WState (Just currentObj) _ world info)  = map DropA validStacksToDropOn
   where
-    validStacksToDropOn = map snd $ filter (\(item, n) -> currentObj `canBeOn` n) $ zip (map headOrFloor world) [1..]
+    validStacksToDropOn :: [Int]
+    validStacksToDropOn = map snd $ filter (\(item, n) -> currentObj `canBeOn` item) $ 
+      zip (map headOrFloor world) [1..]
     canBeOn _ "Floor" = True
     canBeOn id id2 | id `isLargerThan` id2 = False
                    | isBall id  = isBox id2 -- Or is floor, but that's checked beforehand
