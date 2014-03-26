@@ -23,7 +23,7 @@ actions :: WorldState -> [Action]
 actions (WState Nothing _ world info)            = map Plan.Take stacksWithElements
 actions (WState (Just currentObj) _ world info)  = map Plan.Drop validStacksToDropOn
   where
-    validStacksToDropOn = map snd $ filter (\(item, n) -> currentObj `canBeOn` n) $ zip (map head world) [1..]
+    validStacksToDropOn = map snd $ filter (\(item, n) -> currentObj `canBeOn` n) $ zip (map headOrFloor world) [1..]
     canBeOn _ "Floor" = True
     canBeOn id id2 | id `isLargerThan` id2 = False
                    | isBall id  = isBox id2 -- Or is floor, but that's checked beforehand
@@ -31,7 +31,8 @@ actions (WState (Just currentObj) _ world info)  = map Plan.Drop validStacksToDr
                    | isBox id2  = not isPyramid id || not isPlank id || id2 `isLargerThan` id
                    | isBox id   = id `sameSize` id2 && (isTable id2 || isPlank id2 || (isLarge id && isBrick id2))
                    | otherwise = True
-
+    headOrFloor [] = "Floor"
+    headOrFllor l  = head l
     isBall id = getForm id == Ball  
     isBrick id = getForm id == Brick
     isPyramid id = getForm id == Pyramid
