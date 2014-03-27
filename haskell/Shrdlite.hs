@@ -116,6 +116,50 @@ findObjects objQ (x:xs) objInfo = searchInStack objQ x ++ findObjects objQ xs ob
         then objId : searchInStack queryObj xs
         else searchInStack queryObj xs 
 
+findEntities :: Entity -> World -> Objects -> [Id]
+findEntities (BasicEntity _ qObj) wrld objcts        = findObjects qObj wrld objcts
+findEntities (RelativeEntity _ qObj loc) wrld objcts = undefined
+  where
+    matchingObjects   = findObjects qObj wrld objcts
+    matchingLocations = findLocations loc wrld objcts
+findEntities Floor _ _                               = ["Floor"]
+
+-- | Makes sure that the given object fulfills the relation with the 
+-- second one.
+filterByLocation :: Id -> Relation -> Id -> World -> Objects -> Bool
+filterByLocation idObj rel idObj2 w objs = 
+  case rel of
+    Ontop   -> checkOnTop
+    Inside  -> checkOnTop
+    Above   -> checkAbove
+    Under   -> checkUnder
+    Rightof -> checkRight
+    Leftof  -> checkLeft 
+    Beside  -> checkBeside
+  where
+    getObject id = fromJust $ M.lookup id objs
+    getStack id = fst $ fromJust $ M.lookup id positions
+    getPositionInStack id = snd $ fromJust $ M.lookup id positions
+    checkOnTop = getStack idObj == getStack idObj2 
+                 && getPositionInStack idObj == getPositionInStack idObj2 + 1
+    checkAbove = getStack idObj == getStack idObj2
+                 && getPositionInStack idObj > getPositionInStack idObj2 
+    checkUnder = getStack idObj == getStack idObj2
+                 && getPositionInStack idObj < getPositionInStack idObj2
+    checkLeft  = getStack idObj < getStack idObj2
+    checkRight = getStack idObj > getStack idObj2
+    checkBeside = abs (getStack idObj - getStack idObj2) == 1
+    positions  = DataTypes.getPositions w 
+
+
+-- | Generates a list of pairs (Relation, Id) given a relation 
+-- and an entity description. It finds all the entities which 
+-- match the criteria and just pair them with the given relation.
+findLocations :: Location -> World -> Objects -> [(Relation, Id)] 
+findLocations (Relative rel entity) wrld objcts = zip (repeat rel) entities
+  where
+   entities = findEntities entity wrld objcts 
+
 {- 
 data Command  = Take Entity | Put Location | Move Entity Location
 
@@ -131,25 +175,20 @@ interpret world holding objects tree =
   case tree of
     Take entity                    ->
       case holding of
-        Nothing -> map TakeObj $ findEntities entity
+        Nothing -> map TakeObj $ findEntities entity world objects
         Just _  -> []
     Put (Relative relation entity) ->
       case holding of
         Nothing -> []
-        Just id -> map (MoveObj id relation) $ findEntities entity
-    Move entity (Relative relation entity')   -> (findEntities entity) ** (findEntities entity')
+        Just id -> map (MoveObj id relation) $ findEntities entity world objects
+    Move entity loc -> [MoveObj id1 rel id2 | id1 <- matchingObjects
+                                         , (rel, id2) <- matchingLocations
+                                         , physicalLawHolds id1 rel id2]
       where
-        [] ** _          = []
-        _ ** []          = []
-        (x:xs) ** ys     = map (createGoal x) ys ++ (xs ** ys)
-          where
-            createGoal x y = MoveObj x relation y
-  where
-    findEntities (BasicEntity _ queryObj)             = findObjects queryObj world objects
-    findEntities (RelativeEntity _ queryObj location) = filterByLocation location
-                                                        $ findObjects queryObj
-    findEntities Floor                                = ["Floor"]
-    filterByLocation location objects                 = undefined
+        matchingObjects = findEntities entity world objects 
+        matchingLocations = findLocations loc world objects
+        -- TODO
+        physicalLawHolds _ _ _= True
 
 solve :: World -> Maybe Id -> Objects -> Goal -> Maybe Plan
 solve  = plan 

@@ -143,13 +143,4 @@ plan world holding objects goal = go [(initialWorld,[])] S.empty
                                    (map ((oldActions++) . return) newActions)
 
             newVisited    = foldl (\v (w,_) -> S.insert (hash w) v) visited newWorlds
-            newActions    = actions world
-
-
-getPositions :: [[Id]] -> M.Map Id (Int,Int)
-getPositions = snd .
-    foldl (\(cx,m) stack ->
-          (cx+1,snd $ foldl (\(cy,m') elem ->
-                      (cy+1,M.insert elem (cx,cy) m)) (length stack,m) stack))
-    (0,M.empty)
- 
+            newActions    = actions world 
