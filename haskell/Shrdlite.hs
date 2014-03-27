@@ -116,18 +116,24 @@ findObjects objQ (x:xs) objInfo = searchInStack objQ x ++ findObjects objQ xs ob
         then objId : searchInStack queryObj xs
         else searchInStack queryObj xs 
 
+-- | Finds all the ids of the objects matching the given criteria.
 findEntities :: Entity -> World -> Objects -> [Id]
 findEntities (BasicEntity _ qObj) wrld objcts        = findObjects qObj wrld objcts
-findEntities (RelativeEntity _ qObj loc) wrld objcts = undefined
+findEntities (RelativeEntity _ qObj loc) wrld objcts = map fst3 correctOutputs 
   where
     matchingObjects   = findObjects qObj wrld objcts
     matchingLocations = findLocations loc wrld objcts
+    joinTuples        = zipWith (\id1 (rel, id2) -> (id1, rel, id2)) 
+                          matchingObjects matchingLocations
+    correctOutputs    = filter filterFunction joinTuples
+    filterFunction (id1, rel, id2) =  filterByLocation wrld objcts id1 rel id2
+    fst3 (a,b,c) = a
 findEntities Floor _ _                               = ["Floor"]
 
 -- | Makes sure that the given object fulfills the relation with the 
 -- second one.
-filterByLocation :: Id -> Relation -> Id -> World -> Objects -> Bool
-filterByLocation idObj rel idObj2 w objs = 
+filterByLocation :: World -> Objects -> Id -> Relation -> Id -> Bool
+filterByLocation w objs idObj rel idObj2 = 
   case rel of
     Ontop   -> checkOnTop
     Inside  -> checkOnTop
@@ -170,6 +176,9 @@ data Entity   = Floor
               | RelativeEntity Quantifier Object Location
 -}
 
+-- TODO
+physicalLawHolds _ _ _= True
+
 interpret :: World -> Maybe Id -> Objects -> Command -> [Goal]
 interpret world holding objects tree = 
   case tree of
@@ -187,8 +196,6 @@ interpret world holding objects tree =
       where
         matchingObjects = findEntities entity world objects 
         matchingLocations = findLocations loc world objects
-        -- TODO
-        physicalLawHolds _ _ _= True
 
 solve :: World -> Maybe Id -> Objects -> Goal -> Maybe Plan
 solve  = plan 
