@@ -37,13 +37,13 @@ actions :: WorldState -> [Action]
 actions (WState Nothing _ world info)            = map TakeA stacksWithElements
   where
     stacksWithElements = map snd $ filter (\(s, n) -> length s > 0)
-                         $ zip world [1..]
+                         $ zip world [0..]
 
 actions (WState (Just currentObj) _ world info)  = map DropA validStacksToDropOn
   where
     validStacksToDropOn :: [Int]
     validStacksToDropOn = map snd $ filter (\(item, n) -> currentObj `canBeOn` item) $ 
-      zip (map headOrFloor world) [1..]
+      zip (map headOrFloor world) [0..]
 
     canBeOn _ "Floor" = True
     canBeOn id id2 | id `isLargerThan` id2 = False
@@ -53,13 +53,13 @@ actions (WState (Just currentObj) _ world info)  = map DropA validStacksToDropOn
                    | isBox id   = id `sameSize` id2 && (isTable id2 || isPlank id2 || (isLarge id && isBrick id2))
                    | otherwise = True
     headOrFloor [] = "Floor"
-    headOrFllor l  = head l
-    isBall id = getForm id == Ball
-    isBrick id = getForm id == Brick
+    headOrFloor l  = head l
+    isBall id    = getForm id == Ball
+    isBrick id   = getForm id == Brick
     isPyramid id = getForm id == Pyramid
-    isPlank id = getForm id == Plank
-    isBox id = getForm id == Box
-    isTable id = getForm id == Table
+    isPlank id   = getForm id == Plank
+    isBox id     = getForm id == Box
+    isTable id   = getForm id == Table
     isLargerThan id id2 = go (getSize id) (getSize id2)
       where
         go Small _   = False
@@ -87,7 +87,7 @@ isSolution goal worldState =
 	  Inside  -> y1 - y2 == 1
 	  Under   -> y1 < y2
           where
-            Just (x1, y1) = M.lookup id (positions worldState)
+            Just (x1, y1) = M.lookup id  (positions worldState)
             Just (x2, y2) = M.lookup id2 (positions worldState)
     TakeObj id ->
       case holding worldState of
@@ -104,27 +104,34 @@ transition worldState action =
         WState
            (Just id)
            (positions worldState)
-           (take n (world worldState) ++ [tail (world worldState !! n)]
-	   ++ drop (n + 1) (world worldState))
+           (removeFromStackN (world worldState) n)
            (objectsInfo worldState)
     DropA n ->
       let Just id = holding worldState
       in
         WState
 	   Nothing
-	   (M.insert id (n, length $ world worldState !! n) (positions worldState))
-	   (take n (world worldState) ++ [id : world worldState !! n]
-	        ++ drop (n + 1) (world worldState))
+	   (M.insert id (n, length (world worldState !! n) + 1) (positions worldState))
+           (addToStackN (world worldState) id n)
            (objectsInfo worldState)
 
+    where
+      removeFromStackN :: [[a]] -> Int -> [[a]]
+      removeFromStackN stacks n = concat [ take n stacks
+                                         , [tail $ stacks !! n]
+                                         , drop (n+1) stacks ]
+
+      addToStackN :: [[a]] -> a -> Int -> [[a]]
+      addToStackN stacks elem n = concat [ take n stacks
+                                         , [elem : stacks !! n]
+                                         , drop (n + 1) stacks ]
 
 -- Bfs on the tree of worlds
 plan :: World -> Maybe Id -> Objects -> Goal -> Maybe Plan
 plan world holding objects goal = go [(initialWorld,[])] S.empty
   where
   	initialWorld     = WState holding initialPositions world objects
-        -- FAKE
-        initialPositions = M.fromList [("e",(0,1)),("k",(3,1))]
+        initialPositions = getPositions world
           
         go []  _                          = Nothing
         go ((world,oldActions):rest) visited
@@ -139,3 +146,10 @@ plan world holding objects goal = go [(initialWorld,[])] S.empty
             newActions    = actions world
 
 
+getPositions :: [[Id]] -> M.Map Id (Int,Int)
+getPositions = snd .
+    foldl (\(cx,m) stack ->
+          (cx+1,snd $ foldl (\(cy,m') elem ->
+                      (cy+1,M.insert elem (cx,cy) m)) (length stack,m) stack))
+    (0,M.empty)
+ 
