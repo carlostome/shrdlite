@@ -1,9 +1,9 @@
 { 
-    "world": [["e"],[],[],["k"],[]],
+    "world": [["ball"],[],[],["box"],[]],
     "holding": null,
     "objects": {
-        "e": { "form":"ball",    "size":"large",  "color":"white" },
-        "k": { "form":"box",     "size":"large",  "color":"yellow"}
+        "ball": { "form":"ball",    "size":"large",  "color":"white" },
+        "box": { "form":"box",     "size":"large",  "color":"yellow"}
     },
     "utterance": 
         ["put","the","white","ball","in","a","box"],
