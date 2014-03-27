@@ -133,7 +133,7 @@ findEntities Floor _ _                               = ["Floor"]
 -- | Makes sure that the given object fulfills the relation with the 
 -- second one.
 filterByLocation :: World -> Objects -> Id -> Relation -> Id -> Bool
-filterByLocation w objs idObj rel idObj2 = 
+filterByLocation w objs id1 rel id2 = 
   case rel of
     Ontop   -> checkOnTop
     Inside  -> checkOnTop
@@ -143,18 +143,23 @@ filterByLocation w objs idObj rel idObj2 =
     Leftof  -> checkLeft 
     Beside  -> checkBeside
   where
+    getObject "Floor" = error "Can't retrieve the object Floor"
     getObject id = fromJust $ M.lookup id objs
     getStack id = fst $ fromJust $ M.lookup id positions
     getPositionInStack id = snd $ fromJust $ M.lookup id positions
-    checkOnTop = getStack idObj == getStack idObj2 
-                 && getPositionInStack idObj == getPositionInStack idObj2 + 1
-    checkAbove = getStack idObj == getStack idObj2
-                 && getPositionInStack idObj > getPositionInStack idObj2 
-    checkUnder = getStack idObj == getStack idObj2
-                 && getPositionInStack idObj < getPositionInStack idObj2
-    checkLeft  = getStack idObj < getStack idObj2
-    checkRight = getStack idObj > getStack idObj2
-    checkBeside = abs (getStack idObj - getStack idObj2) == 1
+    checkOnTop = (id2 == "Floor" && getPositionInStack id1 == 1)
+                 || 
+                 (getStack id1 == getStack id2 
+                 && getPositionInStack id1 == getPositionInStack id2 + 1)
+    checkAbove = (id2 == "Floor" && getPositionInStack id1 >= 1)
+                 ||
+                 getStack id1 == getStack id2
+                 && getPositionInStack id1 > getPositionInStack id2 
+    checkUnder = getStack id1 == getStack id2
+                 && getPositionInStack id1 < getPositionInStack id2
+    checkLeft  = getStack id1 < getStack id2
+    checkRight = getStack id1 > getStack id2
+    checkBeside = abs (getStack id1 - getStack id2) == 1
     positions  = DataTypes.getPositions w 
 
 
