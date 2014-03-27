@@ -1,12 +1,14 @@
 { 
-    "world": [["ball"],[],[],["box"],[]],
+    "world": [["ball1"],["ball2"],[],["box2","box1"],[]],
     "holding": null,
     "objects": {
-        "ball": { "form":"ball",    "size":"large",  "color":"white" },
-        "box": { "form":"box",     "size":"large",  "color":"yellow"}
+        "ball1": { "form":"ball",    "size":"large",  "color":"white" },
+        "ball2": { "form":"ball",    "size":"small",  "color":"blue" },
+        "box1": { "form":"box",     "size":"large",  "color":"yellow"},
+        "box2": { "form":"box",     "size":"small",  "color":"red"}
     },
     "utterance": 
-        ["put","the","white","ball","in","a","box"],
+    ["put","the","white","ball","in","a","box","on","the","floor"],
     "examples": [
         ["put","the","white","ball","in","a","box","on","the","floor"],
         ["put","the","black","ball","in","a","box","on","the","floor"],
