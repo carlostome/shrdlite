@@ -146,7 +146,9 @@ filterByLocation w objs id1 rel id2 =
   where
     getObject "Floor" = error "Can't retrieve the object Floor"
     getObject id = fromJust $ M.lookup id objs
+    getStack "Floor" = error "Can't retrieve the stack number of a Floor"
     getStack id = fst $ fromJust $ M.lookup id positions
+    getPositionInStack "Floor" = error "Can't retrieve the position in the stack of the Floor"
     getPositionInStack id = snd $ fromJust $ M.lookup id positions
     checkOnTop = (id2 == "Floor" && getPositionInStack id1 == 1)
                  || 
