@@ -15,4 +15,4 @@ objects = M.fromList [ ("ball",Object Small Red Ball)
                      , ("box2",Object Large Blue Box)
                      ]
 
-utterance = ["put","the","ball","in","a","box"]
+utterance = ["put","the","ball","in","a","box","in","a","box","on","the","floor"]

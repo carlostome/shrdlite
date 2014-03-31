@@ -201,6 +201,8 @@ interpret world holding objects tree =
         matchingObjects = findEntities entity world objects 
         matchingLocations = findLocations loc world objects
 
+physicalLawHolds _ _ _ = True
+                         
 solve :: World -> Maybe Id -> Objects -> Goal -> Maybe Plan
 solve  = plan 
 
