@@ -28,7 +28,7 @@ jsonMain :: JSObject JSValue -> JSValue
 jsonMain jsinput = makeObj result
     where 
       utterance = ok (valFromObj "utterance" jsinput)   :: Utterance
-      world     = ok (valFromObj "world"     jsinput)   :: World
+      world     = ok (fmap (map reverse) $ valFromObj "world"     jsinput)   :: World
       holding   = ok (valFromObj "holding"   jsinput >>= parseId )      :: Maybe Id
       objects   = ok (valFromObj "objects"   jsinput >>= parseObjects ) :: Objects
 
@@ -49,7 +49,7 @@ jsonMain jsinput = makeObj result
                    ("goals",     if length trees >= 1 then showJSON (show goals) else JSNull),
                    ("plan",      if isJust plan && length goals == 1 then showJSON (fromJust plan)
 				 else JSNull),
-                   ("world",     showJSON (show objects)),
+--                   ("world",     showJSON (show objects)),
                    ("output",    showJSON output)
                   ]
 

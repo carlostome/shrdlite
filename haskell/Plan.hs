@@ -18,7 +18,7 @@ data Action = DropA Int | TakeA Int
 
 instance Show Action where
   show (DropA n) = "drop " ++ show n
-  show (TakeA n) = "take " ++ show n
+  show (TakeA n) = "pick " ++ show n
 
 -- | WorldState for planning algorithm.
 data WorldState = WState { holding     :: Maybe Id,

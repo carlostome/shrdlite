@@ -1,0 +1,23 @@
+{ 
+    "world": [["box1", "ball1"],["table2","brick1"],["ball3"],["brick3","table1"],[]],
+    "holding": null,
+    "objects": {
+		"box1": {"form":"box", "color":"red", "size":"large"},
+		"ball1":{"form":"ball", "color":"white", "size":"small"},
+		"brick1":{"form":"brick", "color":"green", "size":"small"},
+		"table2":{"form":"table", "color":"white", "size":"large"},
+		"ball3":{"form":"ball", "color":"white", "size":"small"},
+		"brick3":{"form":"brick", "color":"blue", "size":"large"},
+		"table1":{"form":"table", "color":"yellow", "size":"small"}
+    },
+    "utterance": 
+		["take", "the", "white", "ball", "in", "a", "box"],
+    "examples": [
+        ["put","the","white","ball","in","a","box","on","the","floor"],
+        ["put","the","black","ball","in","a","box","on","the","floor"],
+        ["take","a","blue","object"],
+        ["take","the","white","ball"],
+        ["put","all","boxes","on","the","floor"],
+        ["move","all","balls","inside","a","large","box"]
+    ]
+}
