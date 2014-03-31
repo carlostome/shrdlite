@@ -153,12 +153,12 @@ filterByLocation w objs id1 rel id2 =
                  || 
                  (getStack id1 == getStack id2 
                  && getPositionInStack id1 == getPositionInStack id2 + 1)
-    checkAbove = (id2 == "Floor" && getPositionInStack id1 >= 1)
+    checkAbove = (id2 == "Floor")
                  ||
                  getStack id1 == getStack id2
                  && getPositionInStack id1 > getPositionInStack id2 
-    checkUnder = getStack id1 == getStack id2
-                 && getPositionInStack id1 < getPositionInStack id2
+    checkUnder = (id1 == "Floor") || (getStack id1 == getStack id2
+                 && getPositionInStack id1 < getPositionInStack id2)
     checkLeft  = getStack id1 < getStack id2
     checkRight = getStack id1 > getStack id2
     checkBeside = abs (getStack id1 - getStack id2) == 1
@@ -182,9 +182,6 @@ data Entity   = Floor
               | BasicEntity Quantifier Object 
               | RelativeEntity Quantifier Object Location
 -}
-
--- TODO
-physicalLawHolds _ _ _= True
 
 interpret :: World -> Maybe Id -> Objects -> Command -> [Goal]
 interpret world holding objects tree = 
