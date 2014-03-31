@@ -10,7 +10,7 @@ module Shrdlite where
 import ShrdliteGrammar
 import CombinatorParser
 import Text.JSON
-import Data.List (findIndex)
+import Data.List (findIndex, intersperse)
 import qualified Data.Map  as M
 import Data.Maybe (fromJust, isNothing, isJust)
 import Control.Monad (foldM, liftM)
@@ -46,13 +46,19 @@ jsonMain jsinput = makeObj result
 
       result    = [("utterance", showJSON utterance),
                    ("trees",     showJSON (map show trees)),
-                   ("goals",     if length trees >= 1 then showJSON (show goals) else JSNull),
-                   ("plan",      if isJust plan && length goals == 1 then showJSON (fromJust plan)
+                   ("goals",     if length trees >= 1 then showJSON (show goals)
+                                 else JSNull),
+                   ("plan",      if isJust plan && length goals == 1 then
+                                   showJSON (duplicate $ fromJust plan)
 				 else JSNull),
 --                   ("world",     showJSON (show objects)),
                    ("output",    showJSON output)
                   ]
 
+duplicate :: [String] -> [String]
+duplicate [] = []
+duplicate (x:xs) = ("I do: " ++ x) : x : duplicate xs
+                   
 -- | Parse a JSValue to a Maybe Id
 parseId :: JSValue -> Result (Maybe Id)
 parseId JSNull = return Nothing
