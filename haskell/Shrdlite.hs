@@ -121,15 +121,14 @@ findObjects objQ (x:xs) objInfo = searchInStack objQ x ++ findObjects objQ xs ob
 -- | Finds all the ids of the objects matching the given criteria.
 findEntities :: Entity -> World -> Objects -> [Id]
 findEntities (BasicEntity _ qObj) wrld objcts        = findObjects qObj wrld objcts
-findEntities (RelativeEntity _ qObj loc) wrld objcts = map fst3 correctOutputs 
+findEntities (RelativeEntity _ qObj loc) wrld objcts = 
+  [ id1  | (rel,id2) <- matchingLocations, id1 <- matchingObjects
+  , filterByLocation wrld objcts id1 rel id2]
   where
     matchingObjects   = findObjects qObj wrld objcts
     matchingLocations = findLocations loc wrld objcts
-    joinTuples        = zipWith (\id1 (rel, id2) -> (id1, rel, id2)) 
-                          matchingObjects matchingLocations
-    correctOutputs    = filter filterFunction joinTuples
-    filterFunction (id1, rel, id2) =  filterByLocation wrld objcts id1 rel id2
-    fst3 (a,b,c) = a
+
+
 findEntities Floor _ _                               = ["Floor"]
 
 -- | Makes sure that the given object fulfills the relation with the 
@@ -151,10 +150,10 @@ filterByLocation w objs id1 rel id2 =
     getStack id = fst $ fromJust $ M.lookup id positions
     getPositionInStack "Floor" = error "Can't retrieve the position in the stack of the Floor"
     getPositionInStack id = snd $ fromJust $ M.lookup id positions
-    checkOnTop = (id2 == "Floor" && trace (show $ getPositionInStack id1)(getPositionInStack id1 == 1))
+    checkOnTop = (id2 == "Floor" && getPositionInStack id1 == 1)
                  || 
                  (id2 /= "Floor" && getStack id1 == getStack id2 
-                 && getPositionInStack id1 == getPositionInStack id2 - 1)
+                 && getPositionInStack id1 == getPositionInStack id2 + 1)
     checkAbove = (id2 == "Floor")
                  ||
                  getStack id1 == getStack id2
