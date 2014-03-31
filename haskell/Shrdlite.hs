@@ -18,6 +18,8 @@ import Plan
   
 import DataTypes
 
+import Debug.Trace
+  
 main :: IO ()
 main = getContents >>= putStrLn . encode . jsonMain . ok . decode
 
@@ -149,10 +151,10 @@ filterByLocation w objs id1 rel id2 =
     getStack id = fst $ fromJust $ M.lookup id positions
     getPositionInStack "Floor" = error "Can't retrieve the position in the stack of the Floor"
     getPositionInStack id = snd $ fromJust $ M.lookup id positions
-    checkOnTop = (id2 == "Floor" && getPositionInStack id1 == 1)
+    checkOnTop = (id2 == "Floor" && trace (show $ getPositionInStack id1)(getPositionInStack id1 == 1))
                  || 
-                 (getStack id1 == getStack id2 
-                 && getPositionInStack id1 == getPositionInStack id2 + 1)
+                 (id2 /= "Floor" && getStack id1 == getStack id2 
+                 && getPositionInStack id1 == getPositionInStack id2 - 1)
     checkAbove = (id2 == "Floor")
                  ||
                  getStack id1 == getStack id2
@@ -178,7 +180,7 @@ data Command  = Take Entity | Put Location | Move Entity Location
 
 data Location = Relative Relation Entity
 
-data Entity   = Floor 
+data Entity   = Floor 4
               | BasicEntity Quantifier Object 
               | RelativeEntity Quantifier Object Location
 -}
