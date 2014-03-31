@@ -5,7 +5,7 @@
 -- Test from the command line:
 -- runhaskell Shrdlite.hs < ../examples/medium.json
 
-module Main where 
+module Shrdlite where 
 
 import ShrdliteGrammar
 import CombinatorParser
@@ -34,10 +34,9 @@ jsonMain jsinput = makeObj result
 
       goals     = [goal | tree <- trees, goal <- interpret world holding objects tree] :: [Goal]
 
-      plan      = Nothing {-solve world holding objects (head goals)-} :: Maybe Plan
+      plan      = solve world holding objects (head goals) :: Maybe Plan
 
-      force     = error (show goals ++ show trees)
-      output    = if {-null trees-} force then "Parse error!"
+      output    = if null trees then "Parse error!"
                   else if null goals then "Interpretation error!"
                        else if length goals >= 2 then "Ambiguity error!"
                             else if isNothing plan then "Planning error!"
@@ -46,7 +45,7 @@ jsonMain jsinput = makeObj result
       result    = [("utterance", showJSON utterance),
                    ("trees",     showJSON (map show trees)),
                    ("goals",     if length trees >= 1 then showJSON (show goals) else JSNull),
-                   ("plan",      if isJust plan && length goals == 1 then JSNull--showJSON (fromJust plan)
+                   ("plan",      if isJust plan && length goals == 1 then showJSON (fromJust plan)
 				 else JSNull),
                    ("world",     showJSON (show objects)),
                    ("output",    showJSON output)
