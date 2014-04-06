@@ -6,7 +6,9 @@ import ShrdliteGrammar
 
 type Id = String
 
-data Goal = MoveObj Id Relation Id | TakeObj Id deriving (Eq, Show)
+data Goal =   Composed [Goal] 
+            | MoveObj Id Relation Id 
+            | TakeObj Id deriving (Eq, Show)
 type Utterance = [String]
 type World = [[Id]]
 type Objects = M.Map Id Object
@@ -19,12 +21,17 @@ getPositions = snd .
                       (cy-1,M.insert elem (cx,cy) m')) (length stack,m) stack))
     (0,M.empty)
 
+-- | Equality of two objects.
 (~==) :: Object -> Object -> Bool
 (Object sz1 c1 f1) ~== (Object sz2 c2 f2) = (cmpSz sz1 sz2) && (cmpCol c1 c2) && (cmpForm f1 f2)
   where
     cmpSz s1 s2   = s1 == AnySize || s2 == AnySize || s1 == s2
     cmpCol c1 c2  = c1 == AnyColor || c2 == AnyColor || c1 == c2
     cmpForm f1 f2 = f1 == AnyForm || f2 == AnyForm || f1 == f2
+
+getObject :: String -> Objects -> Object
+getObject "Floor" _ = error "Can't retrieve the object Floor"
+getObject id objs   = fromJust $ M.lookup id objs
 
 -- | Makes sure that the given object fulfills the relation with the 
 -- second one.
@@ -39,8 +46,6 @@ validRelationship w objs id1 rel id2 =
     Leftof  -> checkLeft 
     Beside  -> checkBeside
   where
-    getObject "Floor" = error "Can't retrieve the object Floor"
-    getObject id = fromJust $ M.lookup id objs
     getStack "Floor" = error "Can't retrieve the stack number of a Floor"
     getStack id = fst $ fromJust $ M.lookup id positions
     getPositionInStack "Floor" = error "Can't retrieve the position in the stack of the Floor"
