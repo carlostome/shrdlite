@@ -1,0 +1,27 @@
+{ 
+    "world": [["lbrick1","lball1","sbrick1"], [],
+              ["lpyr1","lbox1","lplank2","sball2"], [],
+              ["sbrick2","sbox1","spyr1","ltable1","sball1"]],
+    "holding": null,
+    "objects": {
+        "lbrick1": { "form":"brick",   "size":"large",  "color":"green" },
+        "sbrick1": { "form":"brick",   "size":"small",  "color":"yellow" },
+        "sbrick2": { "form":"brick",   "size":"small",  "color":"blue" },
+        "lplank1": { "form":"plank",   "size":"large",  "color":"red"   },
+        "lplank2": { "form":"plank",   "size":"large",  "color":"black"   },
+        "splank1": { "form":"plank",   "size":"small",  "color":"green" },
+        "lball1":  { "form":"ball",    "size":"large",  "color":"white" },
+        "sball1":  { "form":"ball",    "size":"small",  "color":"black" },
+        "sball2":  { "form":"ball",    "size":"small",  "color":"red" },
+        "ltable1": { "form":"table",   "size":"large",  "color":"green"  },
+        "stable1": { "form":"table",   "size":"small",  "color":"red"   },
+        "lpyr1":   { "form":"pyramid", "size":"large",  "color":"white"},
+        "spyr1":   { "form":"pyramid", "size":"small",  "color":"blue"   },
+        "lbox1":   { "form":"box",     "size":"large",  "color":"yellow"},
+        "sbox1":   { "form":"box",     "size":"small",  "color":"red"   },
+        "sbox2":   { "form":"box",     "size":"small",  "color":"blue"  }
+    },
+    "examples": [
+        ["this","is","just","an","impossible","world"]
+    ]
+}
