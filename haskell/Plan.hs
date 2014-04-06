@@ -1,17 +1,20 @@
 {-# LANGUAGE DeriveGeneric #-}
-module Plan (plan) where
+module Plan  where
 
 import           DataTypes
 import           ShrdliteGrammar
 
 import qualified Data.Map        as M
 import qualified Data.Set        as S
-
+import qualified Data.Heap       as PQ
+    
 import           Data.Hashable   
 import           GHC.Generics    (Generic)
 
-import           Data.Maybe      (fromJust, isJust, isNothing)
-
+import           Data.Maybe      (isJust, isNothing)
+import           Data.List       (foldl')
+import           Debug.Trace (trace)
+  
 -- | Action that can be performed.
 data Action = DropA Int | TakeA Int
 
@@ -34,41 +37,28 @@ instance Hashable WorldState where
 
 -- | Calculates all the possible actions to take in the current world.
 actions :: WorldState -> [Action]
-actions (WState Nothing _ world info)            = map TakeA stacksWithElements
-  where
-    stacksWithElements = map snd $ filter (\(s, n) -> length s > 0)
-                         $ zip world [0..]
+actions (WState holding _ world info) =
+  case holding of
+    Nothing     -> map (TakeA . snd) $ filter ((>0) . length . fst) $ zip world [0..]
 
-actions (WState (Just currentObj) _ world info)  = map DropA validStacksToDropOn
-  where
-    validStacksToDropOn :: [Int]
-    validStacksToDropOn = map snd $ filter (\(item, n) -> currentObj `canBeOn` item) $ 
-      zip (map headOrFloor world) [0..]
-
+    Just obj    -> map (DropA . snd) $ filter (canBeOn obj . fst) $ 
+                   zip (map (\l -> if null l then "Floor" else head l) world)   [0..]
+    where 
     canBeOn _ "Floor" = True
-    canBeOn id id2 | id `isLargerThan` id2 = False
-                   | isBall id  = isBox id2 -- Or is floor, but that's checked beforehand
-                   | isBall id2 = False
-                   | isBox id2  = not (isPyramid id) || not (isPlank id) || id2 `isLargerThan` id
-                   | isBox id   = id `sameSize` id2 && (isTable id2 || isPlank id2 || (isLarge id && isBrick id2))
-                   | otherwise = True
-    headOrFloor [] = "Floor"
-    headOrFloor l  = head l
-    isBall id    = getForm id == Ball
-    isBrick id   = getForm id == Brick
-    isPyramid id = getForm id == Pyramid
-    isPlank id   = getForm id == Plank
-    isBox id     = getForm id == Box
-    isTable id   = getForm id == Table
-    isLargerThan id id2 = go (getSize id) (getSize id2)
-      where
-        go Small _   = False
-        go Large sz2 = sz2 == Small
-    sameSize id id2 = getSize id == getSize id2
-    isLarge id = getSize id == Large
-    getObject id = fromJust $ M.lookup id info
-    getForm id = let (Object _ _ form) = getObject id in form
-    getSize id = let (Object sz _ _ )  = getObject id in sz
+    canBeOn id1 id2
+      | size1 > size2 = False
+      | form1 == Ball = form2 == Box -- Or is floor, but that's checked beforehand
+      | form2 == Ball = False
+      | form2 == Box  = not (form1 == Pyramid) || not (form1 == Plank) || size2 > size1
+      | form1 == Box  = size1 == size2
+                        &&    ( form2 == Table
+                             || form2 == Plank
+                             || (size1 == Large && form2 == Brick))
+      | otherwise = True
+      where 
+        Just (Object size1 _ form1) =  M.lookup id1 info
+        Just (Object size2 _ form2) =  M.lookup id2 info
+    
 
 
 -- Checks if a given world satisfies a world
@@ -78,17 +68,20 @@ isSolution goal worldState =
     MoveObj id rel id2 ->
       if isJust (holding worldState) then False
       else
-	case rel of
+        let Just (x1,y1) = M.lookup id (positions worldState) 
+            Just (x2,y2) = case id2 of
+                             "Floor" -> Just (x1,0)
+                             _       -> M.lookup id2 (positions worldState) 
+	in 
+        case rel of
 	  Beside  -> abs (x1 - x2) == 1
 	  Leftof  -> x1 < x2
 	  Rightof -> x1 > x2
-	  Above   -> y1 > y2
-	  Ontop   -> y1 - y2 == 1
-	  Inside  -> y1 - y2 == 1
-	  Under   -> y1 < y2
-          where
-            Just (x1, y1) = M.lookup id  (positions worldState)
-            Just (x2, y2) = M.lookup id2 (positions worldState)
+	  Above   -> x1 == x2 && y1 > y2
+	  Ontop   -> x1 == x2 && y1 - y2 == 1
+	  Inside  -> x1 == x2 && y1 - y2 == 1
+	  Under   -> x1 == x2 && y1 < y2
+
     TakeObj id ->
       case holding worldState of
 	Just id2 -> id == id2
@@ -126,21 +119,40 @@ transition worldState action =
                                          , [elem : stacks !! n]
                                          , drop (n + 1) stacks ]
 
+
+heuristic :: WorldState -> Int
+heuristic _ = 0
+
+cost :: WorldState -> Action -> Int
+cost _ _ = 1
+
+  
 -- Bfs on the tree of worlds
 plan :: World -> Maybe Id -> Objects -> Goal -> Maybe Plan
-plan world holding objects goal = go [(initialWorld,[])] S.empty
+plan world holding objects goal = go initialQueue S.empty
   where
-  	initialWorld     = WState holding initialPositions world objects
-        initialPositions = getPositions world
-          
-        go []  _                          = Nothing
-        go ((world,oldActions):rest) visited
-          | isSolution goal world         = Just (map show oldActions)
-          | otherwise = go (rest ++ newWorlds) newVisited
-          where
-            newWorlds     =  filter (\(w,_) -> hash w `S.notMember` visited)
-                             $ zip (map (transition world)        newActions)
-                                   (map ((oldActions++) . return) newActions)
+  	initialWorld     = WState holding (getPositions world) world objects
+        initialQueue     = PQ.singleton (PQ.Entry (heuristic initialWorld)
+                                                  (initialWorld,[]))
 
-            newVisited    = foldl (\v (w,_) -> S.insert (hash w) v) visited newWorlds
-            newActions    = actions world 
+        go queue visited =
+          case PQ.viewMin queue of
+            Nothing  -> Nothing
+            Just (PQ.Entry old (world,oldActions),rest) ->
+                 if isSolution goal world then
+                   Just (map show . reverse $ oldActions)
+                 else
+                   go (PQ.union rest (PQ.fromList newWorlds)) newVisited
+                     where
+                       newWorlds =
+                         map (\(w,a) -> PQ.Entry
+                                        (heuristic w + cost world (head a) + old)
+                                        (w,a))
+                          $ filter (\(w,_) -> hash w `S.notMember` visited)
+                          $ zip (map (transition world) newActions)
+                                (map (:oldActions) newActions)
+                                       
+                       newVisited    = foldl' (\v (PQ.Entry _ (w,_))
+                                                 -> S.insert (hash w) v)
+                                       visited newWorlds
+                       newActions    = actions world 
