@@ -126,19 +126,25 @@ heuristic _ = 0
 cost :: WorldState -> Action -> Int
 cost _ _ = 1
 
-  
--- Bfs on the tree of worlds
+-- | Priority holding the heuristic and the cost
+newtype Prio = Prio (Int,Int) deriving (Eq)
+
+instance Ord Prio where
+    compare (Prio (h1, c1)) (Prio (h2, c2)) = compare (h1+c1) (h2+c2)
+
+
+-- | Bfs on the tree of worlds
 plan :: World -> Maybe Id -> Objects -> Goal -> Maybe Plan
 plan world holding objects goal = go initialQueue S.empty
   where
   	initialWorld     = WState holding (getPositions world) world objects
-        initialQueue     = PQ.singleton (PQ.Entry (heuristic initialWorld)
+        initialQueue     = PQ.singleton (PQ.Entry (Prio (heuristic initialWorld,0))
                                                   (initialWorld,[]))
 
         go queue visited =
           case PQ.viewMin queue of
             Nothing  -> Nothing
-            Just (PQ.Entry old (world,oldActions),rest) ->
+            Just (PQ.Entry (Prio (_,oldCost)) (world,oldActions),rest) ->
                  if isSolution goal world then
                    Just (map show . reverse $ oldActions)
                  else
@@ -146,7 +152,8 @@ plan world holding objects goal = go initialQueue S.empty
                      where
                        newWorlds =
                          map (\(w,a) -> PQ.Entry
-                                        (heuristic w + cost world (head a) + old)
+                                        (Prio ( heuristic world
+                                              , cost world (head a) + oldCost))
                                         (w,a))
                           $ filter (\(w,_) -> hash w `S.notMember` visited)
                           $ zip (map (transition world) newActions)
