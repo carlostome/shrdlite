@@ -58,7 +58,7 @@ interpret world holding objects tree =
     Move entity loc -> case getQuantifier entity of
                          All -> case smartMatching 
                                        [] matchingObjects 
-                                          (map snd matchingLocations) 
+                                          (map snd matchingLocationsAll) 
                                 of
                                   [] -> []
                                   list -> [Composed list]
@@ -67,6 +67,7 @@ interpret world holding objects tree =
       where
         matchingObjects = findEntities entity world objects 
         matchingLocations = findLocations loc world objects
+        matchingLocationsAll = findLocations (allToAny loc) world objects
         relation = fst $ head matchingLocations
         smartMatching :: [Goal] -> [Id] -> [Id] -> [Goal]
         smartMatching accum [] _          = accum
@@ -79,6 +80,9 @@ interpret world holding objects tree =
           case filter (validRelationship world objects o relation) locs of
             [] -> (Nothing, locs)
             list -> findMostSuitableLoc objects o locs
+        allToAny (Relative r (BasicEntity All o)) = Relative r (BasicEntity Any o)
+        allToAny (Relative r (RelativeEntity All o loc)) = Relative r (RelativeEntity Any o loc)
+        allToAny loc = loc
 
 -- | Finds the smaller location allowed to be under the given object. 
 -- This is useful in order to distribute the objects in an optimal way.
