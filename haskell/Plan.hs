@@ -62,8 +62,8 @@ actions (WState holding _ world info) =
 
 
 -- Checks if a given world satisfies a world
-isSolution :: Goal -> WorldState -> Bool
-isSolution goal worldState =
+isSolution :: WorldState -> Goal -> Bool
+isSolution worldState goal =
   case goal of
     MoveObj id rel id2 ->
       if isJust (holding worldState) then False
@@ -87,6 +87,7 @@ isSolution goal worldState =
 	Just id2 -> id == id2
 	Nothing -> False
 
+    Composed goals -> and $ map (isSolution worldState) goals 
 -- Apply an action to a world and get a new world
 transition :: WorldState -> Action -> WorldState
 transition worldState action =
@@ -145,7 +146,7 @@ plan world holding objects goal = go initialQueue S.empty
           case PQ.viewMin queue of
             Nothing  -> Nothing
             Just (PQ.Entry (Prio (_,oldCost)) (world,oldActions),rest) ->
-                 if isSolution goal world then
+                 if isSolution world goal then
                    Just (map show . reverse $ oldActions)
                  else
                    go (PQ.union rest (PQ.fromList newWorlds)) newVisited
