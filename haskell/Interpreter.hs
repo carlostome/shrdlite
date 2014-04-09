@@ -7,6 +7,7 @@ import qualified Data.Map        as M
 import           Data.Maybe      (fromJust)
 
 import           Data.List
+
 -- | Finds all the objects matching a given description.
 findObjects :: Object -> World -> Objects -> [Id]
 findObjects _ [] _              = []
@@ -69,10 +70,9 @@ interpret world holding objects tree =
 
         smartMatching :: [Id] -> [Id] -> [Goal]
         smartMatching ids1 ids2 =
-          if null goal then [] else [Composed goal]
+          if null goal then [] else [Composed (maximumBy bestOption goal)]
           where
-            goal = maximumBy bestOption .
-                   filter (any (not . validGoal)) $
+            goal = filter (any (not . validGoal)) $
                    [ zipWith (\id1 id2 -> MoveObj id1 relation id2) ids1  ids2
                    | ids1  <- source, ids2 <- target]
             source = permutations ids1
@@ -91,7 +91,10 @@ interpret world holding objects tree =
                             else
                               let (Object s1 _ _) = getObject id1 objects
                                   (Object s2 _ _) = getObject id2 objects
-                              in (if s1 == Small && s1 == s2 then 1 else 0) + acc + 100) 0
+                                  Just (x1,y1)    = M.lookup id1 positions
+                                  Just (x2,y2)    = M.lookup id2 positions
+                              in (if s1 == Small && s1 == s2 then 1 else 0) - (abs (x1 - y1) + abs (x2 - y2))+ acc + 100) 0
+            positions = getPositions world
 
 getQuantifier :: Entity -> Quantifier
 getQuantifier (BasicEntity q _)      = q
