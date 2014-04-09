@@ -49,7 +49,7 @@ actions (WState holding _ world info) =
       | size1 > size2 = False
       | form1 == Ball = form2 == Box -- Or is floor, but that's checked beforehand
       | form2 == Ball = False
-      | form2 == Box  = not ((form1 == Pyramid) || (form1 == Plank)) || size2 > size1
+      | form2 == Box  = not ((form1 == Box) || (form1 == Pyramid) || (form1 == Plank)) || size2 > size1
       | form1 == Box  = size1 == size2
                         &&    ( form2 == Table
                              || form2 == Plank
