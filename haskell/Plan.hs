@@ -13,7 +13,6 @@ import           GHC.Generics    (Generic)
 
 import           Data.Maybe      (isJust, isNothing)
 import           Data.List       (foldl')
-import           Debug.Trace (trace)
   
 -- | Action that can be performed.
 data Action = DropA Int | TakeA Int
@@ -88,6 +87,7 @@ isSolution worldState goal =
 	Nothing -> False
 
     Composed goals -> and $ map (isSolution worldState) goals 
+
 -- Apply an action to a world and get a new world
 transition :: WorldState -> Action -> WorldState
 transition worldState action =
