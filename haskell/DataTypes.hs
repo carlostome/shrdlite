@@ -1,13 +1,13 @@
 module DataTypes where
 
-import Data.Maybe (fromJust)
-import qualified Data.Map as M
-import ShrdliteGrammar
+import qualified Data.Map        as M
+import           Data.Maybe      (fromJust)
+import           ShrdliteGrammar
 
 type Id = String
 
-data Goal =   Composed [Goal] 
-            | MoveObj Id Relation Id 
+data Goal =   Composed [Goal]
+            | MoveObj Id Relation Id
             | TakeObj Id deriving (Eq, Show)
 type Utterance = [String]
 type World = [[Id]]
@@ -33,17 +33,17 @@ getObject :: String -> Objects -> Object
 getObject "Floor" _ = error "Can't retrieve the object Floor"
 getObject id objs   = fromJust $ M.lookup id objs
 
--- | Makes sure that the given object fulfills the relation with the 
+-- | Makes sure that the given object fulfills the relation with the
 -- second one.
 validRelationship :: World -> Objects -> Id -> Relation -> Id -> Bool
-validRelationship w objs id1 rel id2 = 
+validRelationship w objs id1 rel id2 =
   case rel of
     Ontop   -> checkOnTop
     Inside  -> checkOnTop
     Above   -> checkAbove
     Under   -> checkUnder
     Rightof -> checkRight
-    Leftof  -> checkLeft 
+    Leftof  -> checkLeft
     Beside  -> checkBeside
   where
     getStack "Floor" = error "Can't retrieve the stack number of a Floor"
@@ -51,19 +51,19 @@ validRelationship w objs id1 rel id2 =
     getPositionInStack "Floor" = error "Can't retrieve the position in the stack of the Floor"
     getPositionInStack id = snd $ fromJust $ M.lookup id positions
     checkOnTop = (id2 == "Floor" && getPositionInStack id1 == 1)
-                 || 
-                 (id2 /= "Floor" && getStack id1 == getStack id2 
+                 ||
+                 (id2 /= "Floor" && getStack id1 == getStack id2
                  && getPositionInStack id1 == getPositionInStack id2 + 1)
     checkAbove = (id2 == "Floor")
                  ||
                  getStack id1 == getStack id2
-                 && getPositionInStack id1 > getPositionInStack id2 
+                 && getPositionInStack id1 > getPositionInStack id2
     checkUnder = (id1 == "Floor") || (getStack id1 == getStack id2
                  && getPositionInStack id1 < getPositionInStack id2)
     checkLeft  = getStack id1 < getStack id2
     checkRight = getStack id1 > getStack id2
     checkBeside = abs (getStack id1 - getStack id2) == 1
-    positions  = DataTypes.getPositions w 
+    positions  = DataTypes.getPositions w
 
 -- | Checks if it is possible to put id1 on top of id2
 validMovement :: Objects -> Id -> Id -> Bool
@@ -90,7 +90,7 @@ validMovement info id1 id2 = canBeOn id1 id2
     sameSize a b = getSize a== getSize b
     isLarge a    = getSize a== Large
     getObject a  = fromJust $ M.lookup a info
-    getForm a    = let (Object _ _ f) = getObject a 
+    getForm a    = let (Object _ _ f) = getObject a
                   in f
-    getSize a    = let (Object sz _ _ )  = getObject a 
+    getSize a    = let (Object sz _ _ )  = getObject a
                   in sz

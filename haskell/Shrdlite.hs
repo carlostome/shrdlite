@@ -5,29 +5,29 @@
 -- Test from the command line:
 -- runhaskell Shrdlite.hs < ../examples/medium.json
 
-module Shrdlite where 
+module Shrdlite where
 
-import ShrdliteGrammar
-import CombinatorParser
-import Text.JSON
-import Data.List (findIndex, intersperse)
-import qualified Data.Map  as M
-import Data.Maybe (fromJust, isNothing, isJust)
-import Control.Monad (foldM, liftM)
+import           CombinatorParser
+import           Control.Monad    (foldM, liftM)
+import           Data.List        (findIndex, intersperse)
+import qualified Data.Map         as M
+import           Data.Maybe       (fromJust, isJust, isNothing)
+import           ShrdliteGrammar
+import           Text.JSON
 
-import Plan
-import Interpreter
-import DataTypes
+import           DataTypes
+import           Interpreter
+import           Plan
 
-import Debug.Trace
-  
+import           Debug.Trace
+
 main :: IO ()
 main = getContents >>= putStrLn . encode . jsonMain . ok . decode
 
 
 jsonMain :: JSObject JSValue -> JSValue
 jsonMain jsinput = makeObj result
-    where 
+    where
       utterance = ok (valFromObj "utterance" jsinput)   :: Utterance
       world     = ok (fmap (map reverse) $ valFromObj "world"     jsinput)   :: World
       holding   = ok (valFromObj "holding"   jsinput >>= parseId )      :: Maybe Id
@@ -59,17 +59,17 @@ jsonMain jsinput = makeObj result
 duplicate :: [String] -> [String]
 duplicate [] = []
 duplicate (x:xs) = ("I do: " ++ x) : x : duplicate xs
-                   
+
 -- | Parse a JSValue to a Maybe Id
 parseId :: JSValue -> Result (Maybe Id)
 parseId JSNull = return Nothing
 parseId (JSString str) = return . return . fromJSString $ str
-          
+
 -- | Parse JSON Object to real Object representation.
 parseObjects :: JSObject JSValue -> Result Objects
 parseObjects = foldM (\m (id,JSObject o) -> readObj (fromJSObject o)
                                             >>= \obj -> return $ M.insert id obj m) M.empty
-               . fromJSObject 
+               . fromJSObject
   where
     readObj :: [(String,JSValue)]-> Result Object
     readObj object = do
@@ -101,12 +101,12 @@ parseObjects = foldM (\m (id,JSObject o) -> readObj (fromJSObject o)
                     "small"   -> return Small
                     "large"   -> return Large
                     str       -> fail $ "Not a size: " ++ str
-                                     
+
     look str list = maybe (fail "Not in the list")
-                    (\(JSString s) -> return s) $ lookup str list 
-              
+                    (\(JSString s) -> return s) $ lookup str list
+
 solve :: World -> Maybe Id -> Objects -> Goal -> Maybe Plan
-solve  = plan 
+solve  = plan
 
 ok :: Result a -> a
 ok (Ok res) = res

@@ -4,16 +4,16 @@ module Plan  where
 import           DataTypes
 import           ShrdliteGrammar
 
+import qualified Data.Heap       as PQ
 import qualified Data.Map        as M
 import qualified Data.Set        as S
-import qualified Data.Heap       as PQ
-    
-import           Data.Hashable   
+
+import           Data.Hashable
 import           GHC.Generics    (Generic)
 
-import           Data.Maybe      (isJust, isNothing)
 import           Data.List       (foldl')
-  
+import           Data.Maybe      (isJust, isNothing)
+
 -- | Action that can be performed.
 data Action = DropA Int | TakeA Int
 
@@ -40,9 +40,9 @@ actions (WState holding _ world info) =
   case holding of
     Nothing     -> map (TakeA . snd) $ filter ((>0) . length . fst) $ zip world [0..]
 
-    Just obj    -> map (DropA . snd) $ filter (canBeOn obj . fst) $ 
+    Just obj    -> map (DropA . snd) $ filter (canBeOn obj . fst) $
                    zip (map (\l -> if null l then "Floor" else head l) world)   [0..]
-    where 
+    where
     canBeOn _ "Floor" = True
     canBeOn id1 id2
       | size1 > size2 = False
@@ -54,10 +54,10 @@ actions (WState holding _ world info) =
                              || form2 == Plank
                              || (size1 == Large && form2 == Brick))
       | otherwise = True
-      where 
+      where
         Just (Object size1 _ form1) =  M.lookup id1 info
         Just (Object size2 _ form2) =  M.lookup id2 info
-    
+
 
 
 -- Checks if a given world satisfies a world
@@ -67,11 +67,11 @@ isSolution worldState goal =
     MoveObj id rel id2 ->
       if isJust (holding worldState) then False
       else
-        let Just (x1,y1) = M.lookup id (positions worldState) 
+        let Just (x1,y1) = M.lookup id (positions worldState)
             Just (x2,y2) = case id2 of
                              "Floor" -> Just (x1,0)
-                             _       -> M.lookup id2 (positions worldState) 
-	in 
+                             _       -> M.lookup id2 (positions worldState)
+	in
         case rel of
 	  Beside  -> abs (x1 - x2) == 1
 	  Leftof  -> x1 < x2
@@ -86,7 +86,7 @@ isSolution worldState goal =
 	Just id2 -> id == id2
 	Nothing -> False
 
-    Composed goals -> and $ map (isSolution worldState) goals 
+    Composed goals -> and $ map (isSolution worldState) goals
 
 -- Apply an action to a world and get a new world
 transition :: WorldState -> Action -> WorldState
@@ -125,7 +125,7 @@ heuristic :: WorldState -> Int
 heuristic _ = 0
 
 cost :: WorldState -> Action -> Int
-cost _ _ = 1 
+cost _ _ = 1
 
 -- | Priority holding the heuristic and the cost
 newtype Prio = Prio (Int,Int) deriving (Eq)
@@ -159,8 +159,8 @@ plan world holding objects goal = go initialQueue S.empty
                           $ filter (\(w,_) -> hash w `S.notMember` visited)
                           $ zip (map (transition world) newActions)
                                 (map (:oldActions) newActions)
-                                       
+
                        newVisited    = foldl' (\v (PQ.Entry _ (w,_))
                                                  -> S.insert (hash w) v)
                                        visited newWorlds
-                       newActions    = actions world 
+                       newActions    = actions world
