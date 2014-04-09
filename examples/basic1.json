@@ -8,7 +8,7 @@
 	
     },
     "utterance": 
-    ["put","the","ball","in","a","box","in","a","box","on","the","floor"],
+	["take", "the", "white", "ball"],
     
     "examples": [
         ["put","the","white","ball","in","a","box","on","the","floor"],
