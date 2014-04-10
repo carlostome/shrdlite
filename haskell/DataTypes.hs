@@ -7,7 +7,7 @@ import           ShrdliteGrammar
 type Id = String
 
 data Goal =   Composed [Goal]
-            | MoveObj Id Relation Id
+            | MoveObj Id Relation [Id]
             | TakeObj Id deriving (Eq, Show)
 type Utterance = [String]
 type World = [[Id]]
