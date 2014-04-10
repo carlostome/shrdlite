@@ -25,3 +25,10 @@ Still thinking about:
  - Present suggestions to the user.
  - Some theoretical extension about Natural Semantics.
 
+Notes:
+
+In order to have the code working there are several packages that
+should be installed:
+
+-- heaps-0.3.1
+-- hashable-1.2.1.0
