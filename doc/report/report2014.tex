@@ -1,0 +1,94 @@
+%
+% File eacl2014.tex
+%
+% Contact g.bouma@rug.nl yannick.parmentier@univ-orleans.fr
+%
+% Based on the instruction file for ACL 2013 
+% which in turns was based on the instruction files for previous 
+% ACL and EACL conferences
+
+%% Based on the instruction file for EACL 2006 by Eneko Agirre and Sergi Balari
+%% and that of ACL 2008 by Joakim Nivre and Noah Smith
+
+\documentclass[11pt]{article}
+\usepackage{eacl2014}
+\usepackage{times}
+\usepackage{url}
+\usepackage{latexsym}
+\usepackage[utf8]{inputenc}
+\special{papersize=210mm,297mm} % to avoid having to use "-t a4" with dvips 
+%\setlength\titlebox{6.5cm}  % You can expand the title box if you really have to
+
+\title{Report for Artificial Intelligence TIN 172}
+
+\author{Robert Hangu\\\And
+  Simon Lindfors\\\And
+  Santiago Munín González\\\And
+  Carlos Tomé
+   }
+
+\date{\today}
+
+\begin{document}
+	\maketitle
+	\begin{abstract}
+
+		This document describes the design and implementation of Shrdlite. This 
+		is a smaller version of the Shrdlu game, which is used in the 
+		laboration of Artificial Intelligence TIN 172.
+
+	\end{abstract}
+
+	% ==========================================================================
+	\section{Description}
+	
+	The game Shrdlu consists of a two-dimensional world containing object 
+	stacks. These can be picked up and let down by a robot arm which acts 
+	intelligently. 
+
+	The objects have different shapes, sizes and colors. The robot may only 
+	perform actions which obey physical laws, such as not putting a big object 
+	into a small box or not stacking anything onto of a ball.
+
+	Utterances can be given to the robot through a web interface, which tell it 
+	what objects to move where. The robot arm then finds a way of rearranging 
+	the objets in order to fulfill the user input.
+
+	% ==========================================================================
+	\section{Basic project}
+
+	The purpose of the basic project is to implement a backend for the robot 
+	arm. It receives the input, which is processed by the engine and 
+	generates a list of actions that the robot must perform in order to acheive 
+	the desired outcome.
+	
+	\subsection{Design}
+
+	The top-level design is split into two main phases: interpretation and 
+	planning.
+
+	Interpretation deals with the parsed user input and delivers some goals 
+	according to the input, that are contextualized to the world. For e.g. for the 
+	input ``put the blue ball in the red box'', this should generate a goal 
+	which matches all blue balls to all red boxes.
+	
+	Once the goals are generated, they are passed to the actual planner, which 
+	outputs a list of basic actions.
+
+	\subsection{Implementation}
+
+
+	% ==========================================================================
+	\section{Extensions}
+
+	\subsection{Handling of quantifiers}
+	\subsection{Ambiguity resolution}
+	\subsection{Partial order planning}
+
+	% ==========================================================================
+	\section{Conclusions}
+
+	\bibliographystyle{acl}
+	\bibliography{report2014}
+
+\end{document}

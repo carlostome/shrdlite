@@ -4,4 +4,9 @@
 *.o
 *.pyc
 *.swp
+*.aux
+*.bbl
+*.blg
+*.log
+*.pdf
 __pycache__
