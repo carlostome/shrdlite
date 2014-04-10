@@ -51,13 +51,13 @@ interpret world holding objects tree =
     Put (Relative relation entity) ->
       case holding of
         Nothing -> []
-        Just id -> map (MoveObj id relation) $
+        Just id -> map (MoveObj id relation . (:[])) $
                    findEntities entity world objects
     Move entity loc ->
       case getQuantifier entity of
-        All -> smartMatching matchingObjects (map snd matchingLocationsAll)
+        All -> [Composed $ destinationMatching matchingObjects (map snd matchingLocationsAll)]
 
-        _   -> [MoveObj id1 rel id2 | id1 <- matchingObjects
+        _   -> [MoveObj id1 rel [id2] | id1 <- matchingObjects
                , (rel, id2) <- matchingLocations]
       where
         matchingObjects = findEntities entity world objects
@@ -68,33 +68,10 @@ interpret world holding objects tree =
         allToAny (Relative r (RelativeEntity All o loc)) = Relative r (RelativeEntity Any o loc)
         allToAny loc = loc
 
-        smartMatching :: [Id] -> [Id] -> [Goal]
-        smartMatching ids1 ids2 =
-          if null goal then [] else [Composed (maximumBy bestOption goal)]
-          where
-            goal = filter (any (not . validGoal)) $
-                   [ zipWith (\id1 id2 -> MoveObj id1 relation id2) ids1  ids2
-                   | ids1  <- source, ids2 <- target]
-            source = permutations ids1
-            target =
-              let len1 = length ids1
-              in if ids2 == ["Floor"] then
-                   replicate len1 (replicate len1 "Floor")
-                 else
-                   permutations ids2
-            validGoal (MoveObj id1 rel id2) =
-              validRelationship world objects id1 rel id2
-            bestOption l1 l2 = compare (fitRate l1) (fitRate l2)
-            fitRate = foldl (\acc (MoveObj id1 _ id2) ->
-                            if id2 == "Floor" then
-                              acc + 100
-                            else
-                              let (Object s1 _ _) = getObject id1 objects
-                                  (Object s2 _ _) = getObject id2 objects
-                                  Just (x1,y1)    = M.lookup id1 positions
-                                  Just (x2,y2)    = M.lookup id2 positions
-                              in (if s1 == Small && s1 == s2 then 1 else 0) - (abs (x1 - y1) + abs (x2 - y2))+ acc + 100) 0
-            positions = getPositions world
+        destinationMatching :: [Id] -> [Id] -> [Goal]
+        destinationMatching ids1 ids2 = 
+          [MoveObj id1' relation ids2 | id1' <- ids1]
+
 
 getQuantifier :: Entity -> Quantifier
 getQuantifier (BasicEntity q _)      = q

@@ -12,7 +12,7 @@ import           Data.Hashable
 import           GHC.Generics    (Generic)
 
 import           Data.List       (foldl')
-import           Data.Maybe      (isJust, isNothing)
+import           Data.Maybe      (isJust, isNothing, mapMaybe)
 
 -- | Action that can be performed.
 data Action = DropA Int | TakeA Int
@@ -64,23 +64,26 @@ actions (WState holding _ world info) =
 isSolution :: WorldState -> Goal -> Bool
 isSolution worldState goal =
   case goal of
-    MoveObj id rel id2 ->
+    MoveObj id rel ids2 ->
       if isJust (holding worldState) then False
       else
         let Just (x1,y1) = M.lookup id (positions worldState)
-            Just (x2,y2) = case id2 of
-                             "Floor" -> Just (x1,0)
-                             _       -> M.lookup id2 (positions worldState)
+            coords  = case ids2 of
+                             ["Floor"] -> [(x1,0)]
+                             list      -> 
+                              mapMaybe (flip M.lookup $ (positions worldState)) ids2
 	in
-        case rel of
-	  Beside  -> abs (x1 - x2) == 1
-	  Leftof  -> x1 < x2
-	  Rightof -> x1 > x2
-	  Above   -> x1 == x2 && y1 > y2
-	  Ontop   -> x1 == x2 && y1 - y2 == 1
-	  Inside  -> x1 == x2 && y1 - y2 == 1
-	  Under   -> x1 == x2 && y1 < y2
-
+          any (relOK (x1, y1)) coords  
+      where
+       relOK (x1, y1) (x2, y2) =
+          case rel of
+            Beside  -> abs (x1 - x2) == 1
+            Leftof  -> x1 < x2
+            Rightof -> x1 > x2
+            Above   -> x1 == x2 && y1 > y2
+            Ontop   -> x1 == x2 && y1 - y2 == 1
+            Inside  -> x1 == x2 && y1 - y2 == 1
+            Under   -> x1 == x2 && y1 < y2
     TakeObj id ->
       case holding worldState of
 	Just id2 -> id == id2
