@@ -64,16 +64,16 @@ actions (WState holding _ world info) =
 isSolution :: WorldState -> Goal -> Bool
 isSolution worldState goal =
   case goal of
-    MoveObj id rel ids2 ->
+    MoveObj id rel id2 ->
       if isJust (holding worldState) then False
       else
         let Just (x1,y1) = M.lookup id (positions worldState)
-            coords  = case ids2 of
-                             ["Floor"] -> [(x1,0)]
-                             list      -> 
-                              mapMaybe (flip M.lookup $ (positions worldState)) ids2
+            Just (x2,y2) =
+              case id2 of
+                "Floor" -> return (x1,0)
+                _       -> M.lookup id2 (positions worldState)
 	in
-          any (relOK (x1, y1)) coords  
+          relOK (x1, y1) (x2,y2)
       where
        relOK (x1, y1) (x2, y2) =
           case rel of
@@ -89,8 +89,8 @@ isSolution worldState goal =
 	Just id2 -> id == id2
 	Nothing -> False
 
-    Composed goals -> and $ map (isSolution worldState) goals
-
+    And goals -> and $ map (isSolution worldState) goals
+    Or goals  -> or  $ map (isSolution worldState) goals
 -- Apply an action to a world and get a new world
 transition :: WorldState -> Action -> WorldState
 transition worldState action =

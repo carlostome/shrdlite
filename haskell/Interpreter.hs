@@ -51,13 +51,13 @@ interpret world holding objects tree =
     Put (Relative relation entity) ->
       case holding of
         Nothing -> []
-        Just id -> map (MoveObj id relation . (:[])) $
+        Just id -> map (MoveObj id relation) $
                    findEntities entity world objects
     Move entity loc ->
       case getQuantifier entity of
-        All -> [Composed $ destinationMatching matchingObjects (map snd matchingLocationsAll)]
+        All -> [And $ destinationMatching matchingObjects (map snd matchingLocationsAll)]
 
-        _   -> [MoveObj id1 rel [id2] | id1 <- matchingObjects
+        _   -> [MoveObj id1 rel id2 | id1 <- matchingObjects
                , (rel, id2) <- matchingLocations]
       where
         matchingObjects = findEntities entity world objects
@@ -70,7 +70,7 @@ interpret world holding objects tree =
 
         destinationMatching :: [Id] -> [Id] -> [Goal]
         destinationMatching ids1 ids2 = 
-          [MoveObj id1' relation ids2 | id1' <- ids1]
+          [MoveObj id1' relation id2' | id1' <- ids1, id2' <- ids2]
 
 
 getQuantifier :: Entity -> Quantifier

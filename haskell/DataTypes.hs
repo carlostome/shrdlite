@@ -6,9 +6,11 @@ import           ShrdliteGrammar
 
 type Id = String
 
-data Goal =   Composed [Goal]
-            | MoveObj Id Relation [Id]
-            | TakeObj Id deriving (Eq, Show)
+data Goal = And [Goal]
+          | Or [Goal]
+          | MoveObj Id Relation Id
+          | TakeObj Id deriving (Eq, Show)
+
 type Utterance = [String]
 type World = [[Id]]
 type Objects = M.Map Id Object
