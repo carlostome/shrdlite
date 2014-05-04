@@ -77,7 +77,8 @@ relation = lexicon [(Beside,  ["beside"]),
                   (Above,   ["above"]),
                   (Ontop,   ["on top of", "on"]),
                   (Under,   ["under"]),
-                  (Inside,  ["inside", "in", "into"])]
+-- Desugar Inside as Ontop
+                  (Ontop,  ["inside", "in", "into"])]
 
 size :: SParser Size
 size = lexicon [(Small,  ["small", "tiny"]),
