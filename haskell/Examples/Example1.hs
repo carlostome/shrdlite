@@ -2,6 +2,7 @@ module Example where
 
 import Shrdlite
 import Plan
+import Interpreter
 import ShrdliteGrammar
 import CombinatorParser
 import Data.Map as M
@@ -45,7 +46,7 @@ pos = M.fromList [ ("b",(0,1))
        
 --utterance = ["put","the","ball","in","a","box","in","a","box","on","the","floor"]
 --utterance = ["take", "the", "white", "ball", "in", "a", "box"]
-utterance =["put", "the" ,"green" ,"plank", "in", "a" ,"yellow","box"]
+utterance =["put","all","balls","in","a","box"]
 
 goals :: Utterance -> [Goal]
 goals utterance =

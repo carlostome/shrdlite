@@ -74,7 +74,7 @@ interpret world holding objects tree =
 
         destinationMatching :: [Id] -> [Id] -> [Goal]
         destinationMatching ids1 ids2 = 
-          [MoveObj id1' relation id2' | id1' <- ids1, id2' <- ids2]
+          [Or (map (MoveObj id1' relation) ids2) | id1' <- ids1]
 
 
 getQuantifier :: Entity -> Quantifier

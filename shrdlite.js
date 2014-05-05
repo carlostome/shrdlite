@@ -3,7 +3,7 @@
 var AjaxScript = "cgi-bin/ajaxwrapper.py";
 
 // List of the JSON files that contain example worlds:
-var ExampleNames = ["small","medium","basic1","basic2","complex","impossible"];
+var ExampleNames = ["medium","small","basic1","basic2","complex","impossible"];
 var ExamplesFolder = "examples";
 
 // What the system says when it has nothing to do:
@@ -16,7 +16,7 @@ var WallSeparation = 4;     // pixels
 var ArmSize = 0.2;         // of stack width
 var AnimationPause = 0.1; // seconds
 var PromptPause = 0.5;   // seconds
-var AjaxTimeout = 5;    // seconds
+var AjaxTimeout = 50;    // seconds
 var ArmSpeed = 1000;   // pixels per second
 
 // This only has effect in the latest versions of Chrome and Safari,
