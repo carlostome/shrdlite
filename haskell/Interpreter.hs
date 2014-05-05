@@ -22,8 +22,12 @@ findObjects objQ (x:xs) objInfo = searchInStack objQ x ++ findObjects objQ xs ob
 -- | Finds all the ids of the objects matching the given criteria.
 findEntities :: Entity -> World -> Objects -> [Id]
 findEntities (BasicEntity quantifier qObj) wrld objcts =
-  findObjects qObj wrld objcts
-
+  case quantifier of
+      The | length matchingObjects /=1 -> []
+          | otherwise -> matchingObjects
+      _ -> matchingObjects
+  where
+    matchingObjects = findObjects qObj wrld objcts
 findEntities (RelativeEntity quantifier qObj loc) wrld objcts =
   [ id1  | (rel,id2) <- matchingLocations, id1 <- matchingObjects
   , validRelationship wrld objcts id1 rel id2]
