@@ -12,7 +12,7 @@ import           Data.Hashable
 import           GHC.Generics    (Generic)
 
 import           Data.List       (foldl')
-import           Data.Maybe      (isJust, isNothing, mapMaybe)
+import           Data.Maybe      (isJust)
 
 -- | Action that can be performed.
 data Action = DropA Int | TakeA Int
@@ -129,7 +129,7 @@ heuristic worldState (And goals) =
   maximum $ map (heuristic worldState) goals
 heuristic worldState (Or goals) =
   minimum $ map (heuristic worldState) goals
-heuristic worldState (TakeObj _) = 0
+heuristic _ (TakeObj _) = 0
 heuristic worldState (MoveObj id1 rel id2) =
   case rel of
     Ontop -> hid1 + hid2
@@ -157,13 +157,12 @@ heuristic worldState (MoveObj id1 rel id2) =
                                 else  2 * (length (world worldState !! x) - y)
         hid2 = if (id2 == "Floor") then 0
                else
-                 let Just (x,y) = M.lookup id2 (positions worldState)
+                 let Just (x,_) = M.lookup id2 (positions worldState)
                  in 2 * (length $
                                 takeWhile (\id ->
                                              id /= id2
                                            && not (validRelationship
                                                    (world worldState)
-                                                   (objectsInfo worldState)
                                                    id Ontop id2))
                          (world worldState !! x))
          

@@ -6,8 +6,6 @@ import           ShrdliteGrammar
 import qualified Data.Map        as M
 import           Data.Maybe      (fromJust)
 
-import           Data.List
-
 -- | Finds all the objects matching a given description.
 findObjects :: Object -> World -> Objects -> [Id]
 findObjects _ [] _              = []
@@ -30,7 +28,7 @@ findEntities (BasicEntity quantifier qObj) wrld objcts =
     matchingObjects = findObjects qObj wrld objcts
 findEntities (RelativeEntity quantifier qObj loc) wrld objcts =
   [ id1  | (rel,id2) <- matchingLocations, id1 <- matchingObjects
-  , validRelationship wrld objcts id1 rel id2]
+  , validRelationship wrld id1 rel id2]
   where
     matchingObjects     = findEntities (BasicEntity quantifier qObj) wrld objcts
     matchingLocations   = findLocations loc wrld objcts
@@ -45,6 +43,7 @@ findLocations (Relative rel entity) wrld objcts = zip (repeat rel) entities
   where
    entities = findEntities entity wrld objcts
 
+-- TODO do some kind of checking so we remove not possible at all goal?
 interpret :: World -> Maybe Id -> Objects -> Command -> [Goal]
 interpret world holding objects tree =
   case tree of
@@ -58,25 +57,22 @@ interpret world holding objects tree =
         Just id -> map (MoveObj id relation) $
                    findEntities entity world objects
     Move entity loc ->
-      case getQuantifier entity of
-        All -> [And $ destinationMatching matchingObjects (map snd matchingLocationsAll)]
-
-        _   -> [MoveObj id1 rel id2 | id1 <- matchingObjects
-               , (rel, id2) <- matchingLocations]
+      [fstOperator $ 
+        [sndOperator $ [MoveObj id1 rel id2 | (rel, id2) <- matchingLocations, validMovement objects id1 id2 rel] 
+                                            | id1 <- matchingObjects]
+      ]
       where
         matchingObjects = findEntities entity world objects
         matchingLocations = findLocations loc world objects
-        matchingLocationsAll = findLocations (allToAny loc) world objects
-        relation = fst $ head matchingLocations
-        allToAny (Relative r (BasicEntity All o)) = Relative r (BasicEntity Any o)
-        allToAny (Relative r (RelativeEntity All o loc)) = Relative r (RelativeEntity Any o loc)
-        allToAny loc = loc
-
-        destinationMatching :: [Id] -> [Id] -> [Goal]
-        destinationMatching ids1 ids2 = 
-          [Or (map (MoveObj id1' relation) ids2) | id1' <- ids1]
+        fstOperator = selectOperator $ getQuantifier entity 
+        sndOperator = selectOperator $ getQuantifierLoc loc
+        selectOperator All = And
+        selectOperator _   = Or
 
 
 getQuantifier :: Entity -> Quantifier
 getQuantifier (BasicEntity q _)      = q
 getQuantifier (RelativeEntity q _ _) = q
+
+getQuantifierLoc :: Location -> Quantifier
+getQuantifierLoc (Relative _ entity) = getQuantifier entity
