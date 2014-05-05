@@ -129,45 +129,50 @@ heuristic worldState (And goals) =
   maximum $ map (heuristic worldState) goals
 heuristic worldState (Or goals) =
   minimum $ map (heuristic worldState) goals
-heuristic worldState (TakeObj _) = 0
-heuristic worldState (MoveObj id1 rel id2) =
-  case rel of
-    Ontop -> hid1 + hid2
-      where
-        hid1 = let Just (x,y) = M.lookup id1 (positions worldState)
-               in case holding worldState of
-                 Nothing  ->  2 * (length (world worldState !! x) - y)
-
-                 Just obj -> if obj == id1 then 1
-                             else 2 * (length (world worldState !! x) - y)
+heuristic worldState (TakeObj id1) = 
+  2 * (length (world worldState !! x) - y)
+  where Just (x,y) = M.lookup id1 (positions worldState)
+heuristic worldState goal@(MoveObj id1 rel id2)
+  | isSolution worldState goal = 0
+  | otherwise = 
+    case rel of
+      Ontop -> hid1 + hid2
+        where
+          hid1 = let Just (x,y) = M.lookup id1 (positions worldState)
+                 in case holding worldState of
+                      Nothing  ->  2 * (length (world worldState !! x) - y)
+                                   
+                      Just obj -> if obj == id1 then 1
+                                  else 2 * (length (world worldState !! x) - y)
                                
-                 
-        hid2 = if (id2 == "Floor") then
-                 2 * (minimum $ map length (world worldState))
-               else
-                 let Just (x,y) = M.lookup id2 (positions worldState)
-                 in 2 * (length (world worldState !! x) - y)
-    Above -> hid1 + hid2
-      where
-        hid1 = let Just (x,y) = M.lookup id1 (positions worldState)
-               in case holding worldState of
-                    Nothing  ->  2 * (length (world worldState !! x) - y)
-                                 
-                    Just obj -> if obj == id1 then 1
-                                else  2 * (length (world worldState !! x) - y)
-        hid2 = if (id2 == "Floor") then 0
-               else
-                 let Just (x,y) = M.lookup id2 (positions worldState)
-                 in 2 * (length $
-                                takeWhile (\id ->
-                                             id /= id2
-                                           && not (validRelationship
-                                                   (world worldState)
-                                                   (objectsInfo worldState)
-                                                   id Ontop id2))
-                         (world worldState !! x))
-         
-    _ -> 2
+                                       
+          hid2 = if (id2 == "Floor") then
+                   2 * (minimum $ map length (world worldState))
+                 else
+                   let Just (x,y) = M.lookup id2 (positions worldState)
+                   in 2 * (length (world worldState !! x) - y)
+
+      Above -> hid1 + hid2
+        where
+          hid1 = let Just (x,y) = M.lookup id1 (positions worldState)
+                 in case holding worldState of
+                      Nothing  ->  2 * (length (world worldState !! x) - y)
+                                   
+                      Just obj -> if obj == id1 then 1
+                                  else  2 * (length (world worldState !! x) - y)
+          hid2 = if (id2 == "Floor") then 1
+                 else
+                   let Just (x,y) = M.lookup id2 (positions worldState)
+                   in 2 * (length $
+                                  takeWhile (\id ->
+                                               id /= id2
+                                                    && not (validRelationship
+                                                            (world worldState)
+                                                            (objectsInfo worldState)
+                                                            id1 Ontop id))
+                           (world worldState !! x))
+
+      _ -> 2
          
 cost :: WorldState -> Action -> Int
 cost _ _ = 1
@@ -198,7 +203,7 @@ plan world holding objects goal = go initialQueue S.empty
                      where
                        newWorlds =
                          map (\(w,a) -> PQ.Entry
-                                        (Prio ( heuristic w goal
+                                        (Prio (heuristic w goal
                                               , cost w (head a) + oldCost))
                                         (w,a))
                           $ filter (\(w,_) -> hash w `S.notMember` visited)

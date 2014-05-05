@@ -44,10 +44,12 @@ findLocations (Relative rel entity) wrld objcts = zip (repeat rel) entities
 interpret :: World -> Maybe Id -> Objects -> Command -> [Goal]
 interpret world holding objects tree =
   case tree of
-    Take entity ->
-      case holding of
-        Nothing -> map TakeObj $ findEntities entity world objects
-        Just _  -> []
+    Take entity 
+      | entity == Floor -> []
+      | otherwise -> 
+        case holding of
+          Nothing -> map TakeObj $ findEntities entity world objects
+          Just _  -> []
     Put (Relative relation entity) ->
       case holding of
         Nothing -> []

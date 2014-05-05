@@ -9,24 +9,28 @@ import Data.Map as M
 import DataTypes
   
 worldE  :: World
-worldE   = [["sb"],["bb"],["yb"],["lb"],[]]
+worldE   = [["wb"],[],["xb","bb","yb","lb"],["rbox"]]
            
 
 objects :: Objects
-objects = M.fromList [ ("sb",Object Small Black Ball)
-		     , ("bb",Object Large Blue Box)
-		     , ("yb",Object Large Yellow Box)
-		     , ("lb",Object Large White Ball)
+objects = M.fromList [ ("xb",Object Large Black Plank)
+		     , ("bb",Object Large Blue Plank)
+		     , ("yb",Object Large Yellow Brick)
+		     , ("lb",Object Large White Brick)
+		     , ("wb",Object Large White Ball)
+		     , ("rbox",Object Large Red Box)
                      ]
 
 pos :: Map Id (Int,Int)
-pos = M.fromList [ ("sb",(0,1))
-                 , ("bb",(1,1))
-                 , ("yb",(2,1))
-                 , ("lb",(3,1)) ]
+pos = M.fromList [ ("xb",(1,1))
+                 , ("bb",(1,2))
+                 , ("yb",(1,3))
+                 , ("lb",(1,4))
+                 , ("wb",(0,1))
+                 , ("rbox",(3,1))]
                                 
        
-utterance =["put", "every" ,"ball" ,"in", "a" ,"box"]
+utterance =["put", "the", "white", "ball", "above", "the", "black", "plank"]
 
 goals :: Utterance -> [Goal]
 goals utterance =
