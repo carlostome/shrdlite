@@ -139,7 +139,7 @@ heuristic worldState (MoveObj id1 rel id2) =
                  Nothing  ->  2 * (length (world worldState !! x) - y)
 
                  Just obj -> if obj == id1 then 1
-                             else  2 * (length (world worldState !! x) - y)
+                             else 2 * (length (world worldState !! x) - y)
                                
                  
         hid2 = if (id2 == "Floor") then
