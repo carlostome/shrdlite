@@ -162,25 +162,23 @@ heuristic worldState goal@(MoveObj id1 rel id2)
                                   else  2 * (length (world worldState !! x) - y)
           hid2 = if (id2 == "Floor") then 1
                  else
-                   let Just (x,y) = M.lookup id2 (positions worldState)
+                   let Just (x,_) = M.lookup id2 (positions worldState)
                    in 2 * (length $
                                   takeWhile (\id ->
                                                id /= id2
                                                     && not (validRelationship
                                                             (world worldState)
-                                                            (objectsInfo worldState)
                                                             id1 Ontop id))
                            (world worldState !! x))
 
-      Leftof  -> minimum $ [cost1 + cost2 | 
+      Leftof  -> (2*) $ minimum $ [cost1 + cost2 | 
                         (index1, cost1) <- costs1,
                         (index2, cost2) <- costs2,
                         index1 < index2]
                  where
-                  costs1 = zip [1..] $ calculateCosts id1
-                  costs2 = zip [1..] $ calculateCosts id2
+                  costs1 = zip ([1..]::[Int]) $ calculateCosts id1
+                  costs2 = zip ([1..]::[Int]) $ calculateCosts id2
                   calculateCosts id = map (stackHeuristic id) $ world worldState
-                  stackHeuristic :: Id -> [Id] -> Int
                   stackHeuristic _ [] = 1
                   stackHeuristic id list = heuristic worldState (MoveObj id Above (last list))
       Rightof -> heuristic worldState (MoveObj id2 Leftof id1)
