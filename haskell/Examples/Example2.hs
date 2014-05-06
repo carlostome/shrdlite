@@ -22,15 +22,15 @@ objects = M.fromList [ ("xb",Object Large Black Plank)
                      ]
 
 pos :: Map Id (Int,Int)
-pos = M.fromList [ ("xb",(1,1))
-                 , ("bb",(1,2))
-                 , ("yb",(1,3))
-                 , ("lb",(1,4))
+pos = M.fromList [ ("xb",(2,1))
+                 , ("bb",(2,2))
+                 , ("yb",(2,3))
+                 , ("lb",(2,4))
                  , ("wb",(0,1))
                  , ("rbox",(3,1))]
                                 
        
-utterance =["put", "the", "white", "ball", "above", "the", "black", "plank"]
+utterance =["put", "the", "white", "ball", "on", "the", "black", "plank"]
 
 goals :: Utterance -> [Goal]
 goals utterance =
