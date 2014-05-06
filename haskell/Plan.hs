@@ -12,7 +12,7 @@ import           Data.Hashable
 import           GHC.Generics    (Generic)
 
 import           Data.List       (foldl')
-import           Data.Maybe      (isJust, isNothing, mapMaybe)
+import           Data.Maybe      (isJust)
 
 -- | Action that can be performed.
 data Action = DropA Int | TakeA Int

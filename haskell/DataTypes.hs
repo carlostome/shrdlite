@@ -37,8 +37,8 @@ getObject id objs   = fromJust $ M.lookup id objs
 
 -- | Makes sure that the given object fulfills the relation with the
 -- second one.
-validRelationship :: World -> Objects -> Id -> Relation -> Id -> Bool
-validRelationship w objs id1 rel id2 =
+validRelationship :: World -> Id -> Relation -> Id -> Bool
+validRelationship w id1 rel id2 =
   case rel of
     Ontop   -> checkOnTop
     Inside  -> checkOnTop
@@ -67,9 +67,11 @@ validRelationship w objs id1 rel id2 =
     checkBeside = abs (getStack id1 - getStack id2) == 1
     positions  = DataTypes.getPositions w
 
--- | Checks if it is possible to put id1 on top of id2
-validMovement :: Objects -> Id -> Id -> Bool
-validMovement info id1 id2 = canBeOn id1 id2
+-- | Checks if it is possible to put id1 in relation to id2.
+--  The only case where can be a problem is when it attempts to
+--  put an object over another.
+validMovement :: Objects -> Id -> Id -> Relation -> Bool
+validMovement info id1 id2 Ontop = canBeOn id1 id2
   where
     canBeOn _ "Floor" = True
     canBeOn a b | a `isLargerThan` b = False
@@ -89,10 +91,11 @@ validMovement info id1 id2 = canBeOn id1 id2
         go Small _   = False
         go Large sz2 = sz2 == Small
         go _ _       = error "isLargerThan error: Can't process AnySize"
-    sameSize a b = getSize a== getSize b
-    isLarge a    = getSize a== Large
+    sameSize a b = getSize a == getSize b
+    isLarge a    = getSize a == Large
     getObject a  = fromJust $ M.lookup a info
     getForm a    = let (Object _ _ f) = getObject a
                   in f
     getSize a    = let (Object sz _ _ )  = getObject a
                   in sz
+validMovement _ _ _ _ = True
