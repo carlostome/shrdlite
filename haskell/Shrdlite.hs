@@ -18,7 +18,7 @@ import           Text.JSON
 import           DataTypes
 import           Interpreter
 import           Plan
-
+import Suggestions
 
 main :: IO ()
 main = getContents >>= putStrLn . encode . jsonMain . ok . decode
@@ -37,25 +37,31 @@ jsonMain jsinput = makeObj result
 
       goals     = [goal | tree <- trees, goal <- interpret world holding objects tree] :: [Goal]
 
-      plan      = solve algorithm world holding objects (head goals) :: Maybe Plan
+      plan      = solve algorithm world holding objects (head goals) :: Maybe (Plan,World,Maybe Id)
 
       output    = if null trees then "Parse error!"
                   else if null goals then "Interpretation error!"
                        else if length goals >= 2 then "Ambiguity error!"
                             else if isNothing plan then "Planning error!"
                                  else "Success!"
-      suggestions = ["take the white ball", "put all boxes on the floor"]
 
+      oldWorldSuggestions = suggest world holding objects
+
+      Just (planning,newWorld,newHold) = plan
+      
       result    = [("utterance", showJSON utterance),
                    ("trees",     showJSON (map show trees)),
                    ("goals",     if length trees >= 1 then showJSON (map show goals)
                                  else JSNull),
                    ("plan",      if length goals  == 1 && isJust plan then
-                                   showJSON (duplicate $ fromJust plan)
+                                   showJSON (duplicate planning)
 				 else JSNull),
---                   ("world",     showJSON (show objects)),
                    ("output",    showJSON output),
-                   ("suggestions", showJSON suggestions)
+                   ("suggestions", showJSON $
+                                 if isJust plan then
+                                   suggest newWorld newHold objects
+                                 else
+                                   oldWorldSuggestions)
                   ]
 
 duplicate :: [String] -> [String]
@@ -116,7 +122,7 @@ parseObjects = foldM (\m (id,JSObject o) -> readObj (fromJSObject o)
     look str list = maybe (fail "Not in the list")
                     (\(JSString s) -> return s) $ lookup str list
 
-solve :: Strategy -> World -> Maybe Id -> Objects -> Goal -> Maybe Plan
+solve :: Strategy -> World -> Maybe Id -> Objects -> Goal -> Maybe (Plan,World,Maybe Id)
 solve  = plan
 
 ok :: Result a -> a

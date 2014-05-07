@@ -5,6 +5,7 @@ import Plan
 import Interpreter
 import ShrdliteGrammar
 import CombinatorParser
+import Suggestions
 import Data.Map as M
 import DataTypes
   

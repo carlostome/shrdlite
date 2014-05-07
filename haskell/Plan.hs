@@ -23,10 +23,10 @@ instance Show Action where
   show (TakeA n) = "pick " ++ show n
 
 -- | WorldState for planning algorithm.
-data WorldState = WState { holding     :: Maybe Id,
-                           positions   :: M.Map Id (Int, Int),
-                           world       :: World,
-                           objectsInfo :: M.Map Id Object
+data WorldState = WState { _holding     :: Maybe Id,
+                           _positions   :: M.Map Id (Int, Int),
+                           _world       :: World,
+                           _objectsInfo :: M.Map Id Object
 			 } deriving (Generic)
 
 instance Hashable WorldState where
@@ -64,19 +64,17 @@ actions (WState holding _ world info) =
 isSolution :: WorldState -> Goal -> Bool
 isSolution worldState goal =
   case goal of
-    MoveObj id rel id2 ->
-      if isJust (holding worldState) then False
-      else
-        let Just (x1,y1) = M.lookup id (positions worldState)
+    MoveObj id rel id2 
+      | isJust (_holding worldState) -> False
+      | otherwise ->
+        M.member id (_positions worldState)
+        ||
+        let Just (x1,y1) = M.lookup id (_positions worldState)
             Just (x2,y2) =
               case id2 of
                 "Floor" -> return (x1,0)
-                _       -> M.lookup id2 (positions worldState)
-	in
-          relOK (x1, y1) (x2,y2)
-      where
-       relOK (x1, y1) (x2, y2) =
-          case rel of
+                _       -> M.lookup id2 (_positions worldState)
+	in case rel of
             Beside  -> abs (x1 - x2) == 1
             Leftof  -> x1 < x2
             Rightof -> x1 > x2
@@ -84,8 +82,9 @@ isSolution worldState goal =
             Ontop   -> x1 == x2 && y1 - y2 == 1
             Inside  -> x1 == x2 && y1 - y2 == 1
             Under   -> x1 == x2 && y1 < y2
+
     TakeObj id ->
-      case holding worldState of
+      case _holding worldState of
 	Just id2 -> id == id2
 	Nothing -> False
 
@@ -96,21 +95,21 @@ transition :: WorldState -> Action -> WorldState
 transition worldState action =
   case action of
     TakeA n ->
-      let id = head (world worldState !! n)
+      let id = head (_world worldState !! n)
       in
         WState
            (Just id)
-           (positions worldState)
-           (removeFromStackN (world worldState) n)
-           (objectsInfo worldState)
+           (_positions worldState)
+           (removeFromStackN (_world worldState) n)
+           (_objectsInfo worldState)
     DropA n ->
-      let Just id = holding worldState
+      let Just id = _holding worldState
       in
         WState
 	   Nothing
-	   (M.insert id (n, length (world worldState !! n) + 1) (positions worldState))
-           (addToStackN (world worldState) id n)
-           (objectsInfo worldState)
+	   (M.insert id (n, length (_world worldState !! n) + 1) (_positions worldState))
+           (addToStackN (_world worldState) id n)
+           (_objectsInfo worldState)
 
     where
       removeFromStackN :: [[a]] -> Int -> [[a]]
@@ -130,17 +129,17 @@ heuristicAStar worldState (And goals) =
 heuristicAStar worldState (Or goals) =
   minimum $ map (heuristicAStar worldState) goals
 heuristicAStar worldState (TakeObj id1) = 
-  2 * (length (world worldState !! x) - y)
-  where Just (x,y) = M.lookup id1 (positions worldState)
+  2 * (length (_world worldState !! x) - y)
+  where Just (x,y) = M.lookup id1 (_positions worldState)
 heuristicAStar worldState goal@(MoveObj id1 rel id2)
   | isSolution worldState goal = 0
   | otherwise = 
     case rel of
       Ontop -> hid1 + hid2
         where
-          hid1 = let Just (x,y)  = M.lookup id1 (positions worldState)
-                     movesToFree = (length (world worldState !! x) - y)
-                 in case holding worldState of
+          hid1 = let Just (x,y)  = M.lookup id1 (_positions worldState)
+                     movesToFree = (length (_world worldState !! x) - y)
+                 in case _holding worldState of
                       Nothing  -> movesToFree 
                       Just obj
                         | obj == id1 -> 1
@@ -148,30 +147,30 @@ heuristicAStar worldState goal@(MoveObj id1 rel id2)
                                
                                        
           hid2 = if id2 == "Floor" then
-                    minimum (map length (world worldState))
+                    minimum (map length (_world worldState))
                  else
-                   let Just (x,y) = M.lookup id2 (positions worldState)
-                   in (length (world worldState !! x) - y)
+                   let Just (x,y) = M.lookup id2 (_positions worldState)
+                   in (length (_world worldState !! x) - y)
 
       Above -> hid1 + hid2
         where
-          hid1 = let Just (x,y)    = M.lookup id1 (positions worldState)
-                     movesToFree   = (length (world worldState !! x) - y)
-                 in case holding worldState of
+          hid1 = let Just (x,y)    = M.lookup id1 (_positions worldState)
+                     movesToFree   = (length (_world worldState !! x) - y)
+                 in case _holding worldState of
                       Nothing  -> movesToFree  
                       Just obj 
                         | obj == id1 -> 1
                         | otherwise  -> movesToFree 
 
-          hid2 = let Just (x,y)  = M.lookup id2 (positions worldState)
+          hid2 = let Just (x,y)  = M.lookup id2 (_positions worldState)
                      movesToFit  = length (takeWhile
                                                   (\id ->
                                                      id /= id2
                                                       && not (validRelationship
-                                                              (world worldState)
+                                                              (_world worldState)
                                                               id1 Ontop id))
-                                                  (world worldState !! x))
-                 in case holding worldState of
+                                                  (_world worldState !! x))
+                 in case _holding worldState of
                       Nothing  -> movesToFit 
                       Just obj
                         | obj == id2 -> 1
@@ -190,7 +189,7 @@ heuristicAStar worldState goal@(MoveObj id1 rel id2)
       where
       costs1 = zip ([1..]::[Int]) $ calculateCosts id1
       costs2 = zip ([1..]::[Int]) $ calculateCosts id2
-      calculateCosts id = map (stackheuristicAStar id) $ world worldState
+      calculateCosts id = map (stackheuristicAStar id) $ _world worldState
       stackheuristicAStar _ [] = 1
       stackheuristicAStar id list = heuristicAStar worldState (MoveObj id Above (last list))
          
@@ -205,7 +204,7 @@ instance Ord Prio where
 
 
 -- | Bfs on the tree of worlds
-plan :: Strategy -> World -> Maybe Id -> Objects -> Goal -> Maybe Plan
+plan :: Strategy -> World -> Maybe Id -> Objects -> Goal -> Maybe (Plan,World,Maybe Id)
 plan strategy world holding objects goal = go initialQueue S.empty
   where
   	initialWorld     = WState holding (getPositions world) world objects
@@ -221,7 +220,9 @@ plan strategy world holding objects goal = go initialQueue S.empty
             Nothing  -> Nothing
             Just (PQ.Entry (Prio (_,oldCost)) (world,oldActions),rest) ->
                  if isSolution world goal then
-                   Just (map show . reverse $ oldActions)
+                   Just ( map show . reverse $ oldActions
+                        , _world world
+                        , _holding world)
                  else
                    go (PQ.union rest (PQ.fromList newWorlds)) newVisited
                      where
