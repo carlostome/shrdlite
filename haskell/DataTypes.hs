@@ -99,4 +99,9 @@ validMovement info id1 id2 Ontop = canBeOn id1 id2
                   in f
     getSize a    = let (Object sz _ _ )  = getObject a
                   in sz
-validMovement _ _ _ _ = True
+validMovement _ _ "Floor" Leftof  = False
+validMovement _ _ "Floor" Rightof = False
+validMovement _ _ "Floor" Beside  = False
+validMovement _ _ "Floor" Under   = False
+validMovement _ "Floor" _ _       = False
+validMovement _ _ _ _             = True
