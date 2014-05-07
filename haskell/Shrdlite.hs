@@ -74,7 +74,7 @@ parseStrategy (JSString str) =
        "1" -> return BFS
        "2" -> return LowerCost
        "3" -> return PartialOrderPlanner
-       _   -> error "Invalid algorithm"
+       other   -> error other
 
 -- | Parse JSON Object to real Object representation.
 parseObjects :: JSObject JSValue -> Result Objects
