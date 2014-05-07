@@ -75,6 +75,7 @@ interpret world holding objects tree =
 getQuantifier :: Entity -> Quantifier
 getQuantifier (BasicEntity q _)      = q
 getQuantifier (RelativeEntity q _ _) = q
+getQuantifier Floor = Any 
 
 getQuantifierLoc :: Location -> Quantifier
 getQuantifierLoc (Relative _ entity) = getQuantifier entity

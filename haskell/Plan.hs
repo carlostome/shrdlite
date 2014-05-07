@@ -146,31 +146,39 @@ heuristic worldState goal@(MoveObj id1 rel id2)
                                   else 2 * (length (world worldState !! x) - y)
                                
                                        
-          hid2 = if (id2 == "Floor") then
-                   2 * (minimum $ map length (world worldState))
+          hid2 = if id2 == "Floor" then
+                    2 * minimum (map length (world worldState))
+                    + case holding worldState of
+                        Nothing  -> 2 
+                        Just obj -> if obj == id1 then 1 else 2
                  else
                    let Just (x,y) = M.lookup id2 (positions worldState)
                    in 2 * (length (world worldState !! x) - y)
 
       Above -> hid1 + hid2
         where
-          hid1 = let Just (x,y) = M.lookup id1 (positions worldState)
+          hid1 = let Just (x,y)    = M.lookup id1 (positions worldState)
+                     movesToFree   = 2 * (length (world worldState !! x) - y)
                  in case holding worldState of
-                      Nothing  ->  2 * (length (world worldState !! x) - y)
-                                   
-                      Just obj -> if obj == id1 then 1
-                                  else  2 * (length (world worldState !! x) - y)
-          hid2 = if (id2 == "Floor") then 1
-                 else
-                   let Just (x,_) = M.lookup id2 (positions worldState)
-                   in 2 * (length $
-                                  takeWhile (\id ->
-                                               id /= id2
-                                                    && not (validRelationship
-                                                            (world worldState)
-                                                            id1 Ontop id))
-                           (world worldState !! x))
+                      Nothing  -> movesToFree + 2 
+                      Just obj 
+                        | obj == id1 -> 1
+                        | otherwise  -> movesToFree + 2
 
+          hid2 = let Just (x,y)  = M.lookup id2 (positions worldState)
+                     movesToFit  =  2 * length (takeWhile
+                                                  (\id ->
+                                                     id /= id2
+                                                      && not (validRelationship
+                                                              (world worldState)
+                                                              id1 Ontop id))
+                                                  (world worldState !! x))
+                 in case holding worldState of
+                      Nothing  -> movesToFit 
+                      Just obj
+                        | obj == id2 -> 1
+                        | otherwise  -> movesToFit
+          
       Leftof  -> (2*) $ minimum $ [cost1 + cost2 | 
                         (index1, cost1) <- costs1,
                         (index2, cost2) <- costs2,
