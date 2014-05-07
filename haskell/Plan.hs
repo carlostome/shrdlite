@@ -195,8 +195,8 @@ instance Ord Prio where
 
 
 -- | Bfs on the tree of worlds
-plan :: World -> Maybe Id -> Objects -> Goal -> Maybe Plan
-plan world holding objects goal = go initialQueue S.empty
+plan :: Strategy -> World -> Maybe Id -> Objects -> Goal -> Maybe Plan
+plan _ world holding objects goal = go initialQueue S.empty
   where
   	initialWorld     = WState holding (getPositions world) world objects
         initialQueue     = PQ.singleton (PQ.Entry (Prio (0,0))

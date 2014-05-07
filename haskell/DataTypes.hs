@@ -15,6 +15,7 @@ type Utterance = [String]
 type World = [[Id]]
 type Objects = M.Map Id Object
 type Plan = [String]
+data Strategy = AStar | BFS | LowerCost | PartialOrderPlanner
 
 getPositions :: [[Id]] -> M.Map Id (Int,Int)
 getPositions = snd .

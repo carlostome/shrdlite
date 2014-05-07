@@ -32,12 +32,13 @@ jsonMain jsinput = makeObj result
       world     = ok (fmap (map reverse) $ valFromObj "world"     jsinput)   :: World
       holding   = ok (valFromObj "holding"   jsinput >>= parseId )      :: Maybe Id
       objects   = ok (valFromObj "objects"   jsinput >>= parseObjects ) :: Objects
+      algorithm = ok (valFromObj "strategy" jsinput >>= parseStrategy ) :: Strategy
 
       trees     = parse command utterance :: [Command]
 
       goals     = [goal | tree <- trees, goal <- interpret world holding objects tree] :: [Goal]
 
-      plan      = solve world holding objects (head goals) :: Maybe Plan
+      plan      = solve algorithm world holding objects (head goals) :: Maybe Plan
 
       output    = if null trees then "Parse error!"
                   else if null goals then "Interpretation error!"
@@ -64,6 +65,15 @@ duplicate (x:xs) = ("I do: " ++ x) : x : duplicate xs
 parseId :: JSValue -> Result (Maybe Id)
 parseId JSNull = return Nothing
 parseId (JSString str) = return . return . fromJSString $ str
+
+parseStrategy :: JSValue -> Result Strategy
+parseStrategy (JSString str) = 
+  case fromJSString str of
+       "0" -> return AStar
+       "1" -> return BFS
+       "2" -> return LowerCost
+       "3" -> return PartialOrderPlanner
+       _   -> error "Invalid algorithm"
 
 -- | Parse JSON Object to real Object representation.
 parseObjects :: JSObject JSValue -> Result Objects
@@ -105,7 +115,7 @@ parseObjects = foldM (\m (id,JSObject o) -> readObj (fromJSObject o)
     look str list = maybe (fail "Not in the list")
                     (\(JSString s) -> return s) $ lookup str list
 
-solve :: World -> Maybe Id -> Objects -> Goal -> Maybe Plan
+solve :: Strategy -> World -> Maybe Id -> Objects -> Goal -> Maybe Plan
 solve  = plan
 
 ok :: Result a -> a
