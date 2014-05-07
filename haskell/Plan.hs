@@ -175,14 +175,18 @@ heuristic worldState goal@(MoveObj id1 rel id2)
                         (index1, cost1) <- costs1,
                         (index2, cost2) <- costs2,
                         index1 < index2]
-                 where
-                  costs1 = zip ([1..]::[Int]) $ calculateCosts id1
-                  costs2 = zip ([1..]::[Int]) $ calculateCosts id2
-                  calculateCosts id = map (stackHeuristic id) $ world worldState
-                  stackHeuristic _ [] = 1
-                  stackHeuristic id list = heuristic worldState (MoveObj id Above (last list))
       Rightof -> heuristic worldState (MoveObj id2 Leftof id1)
+      Beside  -> (2*) $ minimum $ [cost1 + cost2 |
+                                  (index1, cost1) <- costs1,
+                                  (index2, cost2) <- costs2, 
+                                  (abs (index1 - index2) == 1)]
       _ -> 2
+      where
+      costs1 = zip ([1..]::[Int]) $ calculateCosts id1
+      costs2 = zip ([1..]::[Int]) $ calculateCosts id2
+      calculateCosts id = map (stackHeuristic id) $ world worldState
+      stackHeuristic _ [] = 1
+      stackHeuristic id list = heuristic worldState (MoveObj id Above (last list))
          
 cost :: WorldState -> Action -> Int
 cost _ _ = 1
