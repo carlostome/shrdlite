@@ -426,14 +426,15 @@ function userInput() {
         return;
     }
     disableInput();
-
+    var algorithm = $("#algorithm").val();
     sayUtterance("user", userinput);
 
     var ajaxdata = {'world': currentWorld.world,
                     'objects': currentWorld.objects,
                     'holding': currentWorld.holding,
                     'state': currentWorld.state,
-                    'utterance': userinput.split(/\s+/)
+                    'utterance': userinput.split(/\s+/),
+                    'strategy': algorithm
                    };
 
     $.ajax({
