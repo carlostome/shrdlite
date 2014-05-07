@@ -37,31 +37,29 @@ jsonMain jsinput = makeObj result
 
       goals     = [goal | tree <- trees, goal <- interpret world holding objects tree] :: [Goal]
 
-      plan      = solve algorithm world holding objects (head goals) :: Maybe (Plan,World,Maybe Id)
-
+      solution  = plan algorithm world holding objects (head goals) :: Maybe (Plan,WorldState)
+                  
       output    = if null trees then "Parse error!"
                   else if null goals then "Interpretation error!"
                        else if length goals >= 2 then "Ambiguity error!"
-                            else if isNothing plan then "Planning error!"
+                            else if isNothing solution then "Planning error!"
                                  else "Success!"
 
-      oldWorldSuggestions = suggest world holding objects
-
-      Just (planning,newWorld,newHold) = plan
-      
       result    = [("utterance", showJSON utterance),
                    ("trees",     showJSON (map show trees)),
                    ("goals",     if length trees >= 1 then showJSON (map show goals)
                                  else JSNull),
-                   ("plan",      if length goals  == 1 && isJust plan then
-                                   showJSON (duplicate planning)
+                   ("plan",      if length goals  == 1 && isJust solution then
+                                   showJSON (duplicate . fst . fromJust $ solution)
 				 else JSNull),
                    ("output",    showJSON output),
-                   ("suggestions", showJSON $
-                                 if isJust plan then
-                                   suggest newWorld newHold objects
+                   ("suggestions",if length goals == 1 && isJust solution then 
+                                    showJSON $
+                                         suggest (_world . snd . fromJust $ solution)
+                                                 (_holding . snd . fromJust $ solution)
+                                                 objects
                                  else
-                                   oldWorldSuggestions)
+                                   showJSON $ suggest world holding objects)
                   ]
 
 duplicate :: [String] -> [String]
@@ -121,9 +119,6 @@ parseObjects = foldM (\m (id,JSObject o) -> readObj (fromJSObject o)
 
     look str list = maybe (fail "Not in the list")
                     (\(JSString s) -> return s) $ lookup str list
-
-solve :: Strategy -> World -> Maybe Id -> Objects -> Goal -> Maybe (Plan,World,Maybe Id)
-solve  = plan
 
 ok :: Result a -> a
 ok (Ok res) = res

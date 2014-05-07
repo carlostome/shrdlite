@@ -13,7 +13,7 @@ findObjects objQ (x:xs) objInfo = searchInStack objQ x ++ findObjects objQ xs ob
   where
     searchInStack _              [] = []
     searchInStack queryObj (objId:xs) =
-      if queryObj ~== (fromJust $ M.lookup objId objInfo)
+      if queryObj ~== maybe (error "searchInStack") id (M.lookup objId objInfo)
         then objId : searchInStack queryObj xs
         else searchInStack queryObj xs
 

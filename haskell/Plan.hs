@@ -68,7 +68,7 @@ isSolution worldState goal =
       | isJust (_holding worldState) -> False
       | otherwise ->
         M.member id (_positions worldState)
-        ||
+        &&
         let Just (x1,y1) = M.lookup id (_positions worldState)
             Just (x2,y2) =
               case id2 of
@@ -166,9 +166,11 @@ heuristicAStar worldState goal@(MoveObj id1 rel id2)
                      movesToFit  = length (takeWhile
                                                   (\id ->
                                                      id /= id2
-                                                      && not (validRelationship
-                                                              (_world worldState)
-                                                              id1 Ontop id))
+                                                      && not (validMovement
+                                                              (_objectsInfo worldState)
+                                                              id1
+                                                              id
+                                                              Ontop))
                                                   (_world worldState !! x))
                  in case _holding worldState of
                       Nothing  -> movesToFit 
@@ -204,7 +206,7 @@ instance Ord Prio where
 
 
 -- | Bfs on the tree of worlds
-plan :: Strategy -> World -> Maybe Id -> Objects -> Goal -> Maybe (Plan,World,Maybe Id)
+plan :: Strategy -> World -> Maybe Id -> Objects -> Goal -> Maybe (Plan,WorldState)
 plan strategy world holding objects goal = go initialQueue S.empty
   where
   	initialWorld     = WState holding (getPositions world) world objects
@@ -220,9 +222,7 @@ plan strategy world holding objects goal = go initialQueue S.empty
             Nothing  -> Nothing
             Just (PQ.Entry (Prio (_,oldCost)) (world,oldActions),rest) ->
                  if isSolution world goal then
-                   Just ( map show . reverse $ oldActions
-                        , _world world
-                        , _holding world)
+                   Just ( map show . reverse $ oldActions, world)
                  else
                    go (PQ.union rest (PQ.fromList newWorlds)) newVisited
                      where

@@ -55,8 +55,8 @@ goals utterance =
 		[goal | tree <- trees, goal <- interpret worldE Nothing objects tree] :: [Goal]
 
 
-worldS = WState { holding     = Nothing,
-                  positions   = pos,
-                  world       = worldE,
-                  objectsInfo = objects
+worldS = WState { _holding     = Nothing,
+                  _positions   = pos,
+                  _world       = worldE,
+                  _objectsInfo = objects
 		}

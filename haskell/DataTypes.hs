@@ -1,7 +1,6 @@
 module DataTypes where
 
 import qualified Data.Map        as M
-import           Data.Maybe      (fromJust)
 import           ShrdliteGrammar
 
 type Id = String
@@ -34,7 +33,7 @@ getPositions = snd .
 
 getObject :: String -> Objects -> Object
 getObject "Floor" _ = error "Can't retrieve the object Floor"
-getObject id objs   = fromJust $ M.lookup id objs
+getObject id1 objs   = maybe (error "getObject") id (M.lookup id1 objs)
 
 -- | Makes sure that the given object fulfills the relation with the
 -- second one.
@@ -50,9 +49,10 @@ validRelationship w id1 rel id2 =
     Beside  -> checkBeside
   where
     getStack "Floor" = error "Can't retrieve the stack number of a Floor"
-    getStack id = fst $ fromJust $ M.lookup id positions
+    getStack id = maybe (error "getStack") fst (M.lookup id positions)
     getPositionInStack "Floor" = error "Can't retrieve the position in the stack of the Floor"
-    getPositionInStack id = snd $ fromJust $ M.lookup id positions
+    getPositionInStack id = maybe (error "getPositionInStack") snd
+                                  (M.lookup id positions)
     checkOnTop = (id2 == "Floor" && getPositionInStack id1 == 1)
                  ||
                  (id2 /= "Floor" && getStack id1 == getStack id2
@@ -94,7 +94,7 @@ validMovement info id1 id2 Ontop = canBeOn id1 id2
         go _ _       = error "isLargerThan error: Can't process AnySize"
     sameSize a b = getSize a == getSize b
     isLarge a    = getSize a == Large
-    getObject a  = fromJust $ M.lookup a info
+    getObject a  = maybe (error $ "getObject" ++ show a) id (M.lookup a info)
     getForm a    = let (Object _ _ f) = getObject a
                   in f
     getSize a    = let (Object sz _ _ )  = getObject a
