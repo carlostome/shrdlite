@@ -85,7 +85,11 @@ $(function() {
         return false;
     });
     $('#inputexamples').change(function(){
-        userInput();
+        userInput($("#inputexamples").val());
+        return false;
+    });
+    $('#suggestions_spinner').change(function(){
+        userInput($("#suggestions_spinner").val());
         return false;
     });
     $('#showdebug').click(function(){
@@ -133,6 +137,8 @@ function resetCurrentExample(name) {
         if (value instanceof Array) value = value.join(" ");
         $('#inputexamples').append($('<option>').text(value));
     });
+    $('#suggestions_spinner').empty();
+    $('#suggestions_spinner').append($('<option value="">').text("(Select an example utterance)"));
     $("#dialogue > p").remove();
     resetSVG();
 }
@@ -358,6 +364,8 @@ function disableInput(timeout) {
         $("#inputexamples").prop('disabled', true); 
         $("#userinput").blur();
         $("#userinput").prop('disabled', true); 
+        $("#suggestions_spinner").blur();
+        $("#suggestions_spinner").prop('disabled', true); 
     }
 }
 
@@ -375,6 +383,8 @@ function enableInput() {
     $("#inputexamples option:first").attr('selected','selected');
     $("#userinput").prop('disabled', false); 
     $("#userinput").focus().select();
+    $("#suggestions_spinner").prop('disabled', false).val(''); 
+    $("#suggestions_spinner option:first").attr('selected','selected');
 }
 
 function performPlan() {
@@ -413,8 +423,8 @@ function getAction(item) {
 function splitAction(action) {
 }
 
-function userInput() {
-    var userinput = $("#inputexamples").val();
+function userInput(input) {
+    var userinput = input; 
     if (userinput) {
         $("#userinput").val(userinput.trim());
         enableInput();
@@ -428,7 +438,7 @@ function userInput() {
     disableInput();
     var algorithm = $("#algorithm").val();
     sayUtterance("user", userinput);
-
+    $("#suggestions").hide();
     var ajaxdata = {'world': currentWorld.world,
                     'objects': currentWorld.objects,
                     'holding': currentWorld.holding,
@@ -451,6 +461,15 @@ function userInput() {
             result = JSON.parse(result);
         } catch(err) {
             alertError("JSON error:" + err, result);
+        }
+        if (result.suggestions) {
+          var suggestions = $("#suggestions");
+          var spinner = suggestions.children("#suggestions_spinner");
+          result.suggestions.forEach(function(sug) {
+            spinner.append($("<option></option>").
+                            text(sug));
+            });
+          suggestions.show();
         }
         debugResult(result);
         sayUtterance("system", result.output);

@@ -19,7 +19,6 @@ import           DataTypes
 import           Interpreter
 import           Plan
 
-import           Debug.Trace
 
 main :: IO ()
 main = getContents >>= putStrLn . encode . jsonMain . ok . decode
@@ -45,6 +44,7 @@ jsonMain jsinput = makeObj result
                        else if length goals >= 2 then "Ambiguity error!"
                             else if isNothing plan then "Planning error!"
                                  else "Success!"
+      suggestions = ["take the white ball", "put all boxes on the floor"]
 
       result    = [("utterance", showJSON utterance),
                    ("trees",     showJSON (map show trees)),
@@ -54,7 +54,8 @@ jsonMain jsinput = makeObj result
                                    showJSON (duplicate $ fromJust plan)
 				 else JSNull),
 --                   ("world",     showJSON (show objects)),
-                   ("output",    showJSON output)
+                   ("output",    showJSON output),
+                   ("suggestions", showJSON suggestions)
                   ]
 
 duplicate :: [String] -> [String]
