@@ -502,9 +502,8 @@ function userInput(input) {
         if (result.state) {
             currentWorld.state = result.state;
         }
-        currentPlan = result.plan;
-        performPlan();
-    });
+        currentPlan = result.plan; 
+        performPlan();});
 }
 
 function sayUtterance(participant, utterance, silent) {
