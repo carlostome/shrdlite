@@ -23,30 +23,17 @@ instance Show Action where
 
 -- | Calculates all the possible actions to take in the current world.
 actions :: WorldState -> [Action]
-actions (WState holding _ world info) =
+actions worldState@(WState holding _ world info) =
   case holding of
-    Nothing     -> map (TakeA . snd) $ filter ((>0) . length . fst) $ zip world [0..]
+    Nothing     -> [ TakeA n | (stack,n) <- zip world [0..]
+                             , length stack > 0]
 
-    Just obj    -> map (DropA . snd) $ filter (canBeOn obj . fst) $
-                   zip (map (\l -> if null l then "Floor" else head l) world)   [0..]
-    where
-    canBeOn _ "Floor" = True
-    canBeOn id1 id2
-      | size1 > size2 = False
-      | form1 == Ball = form2 == Box -- Or is floor, but that's checked beforehand
-      | form2 == Ball = False
-      | form2 == Box  = or [ not ((form1 == Box) || (form1 == Pyramid) || (form1 == Plank))
-                           , size2 > size1]
-      | form1 == Box  = size1 == size2
-                        &&    ( form2 == Table
-                             || form2 == Plank
-                             || (size1 == Large && form2 == Brick))
-      | otherwise = True
-      where
-        Just (Object size1 _ form1) =  M.lookup id1 info
-        Just (Object size2 _ form2) =  M.lookup id2 info
-
-
+    Just obj    -> [ DropA n | (stack,n) <- zip world [0..]
+                             , let obj2 = if null stack then "Floor"
+                                          else head stack
+                             , relationValid (_objectsInfo worldState)
+                                             obj obj2 Ontop] 
+                       
 
 -- Checks if a given world satisfies a goal
 isSolution :: WorldState -> Goal -> Bool
@@ -54,30 +41,15 @@ isSolution worldState goal =
   case goal of
     MoveObj id rel id2 
       | isJust (_holding worldState) -> False
-      | otherwise ->
-        M.member id (_positions worldState)
-        &&
-        let Just (x1,y1) = M.lookup id (_positions worldState)
-            Just (x2,y2) =
-              case id2 of
-                "Floor" -> return (x1,0)
-                _       -> M.lookup id2 (_positions worldState)
-	in case rel of
-            Beside  -> abs (x1 - x2) == 1
-            Leftof  -> x1 < x2
-            Rightof -> x1 > x2
-            Above   -> x1 == x2 && y1 > y2
-            Ontop   -> x1 == x2 && y1 - y2 == 1
-            Inside  -> x1 == x2 && y1 - y2 == 1
-            Under   -> x1 == x2 && y1 < y2
+      | otherwise -> relationHolds worldState id rel id2
 
     TakeObj id ->
       case _holding worldState of
 	Just id2 -> id == id2
 	Nothing -> False
 
-    And goals -> and $ map (isSolution worldState) goals
-    Or goals  -> or  $ map (isSolution worldState) goals
+    And goals -> all (isSolution worldState) goals
+    Or goals  -> any (isSolution worldState) goals
 
 -- Apply an action to a world and get a new world
 transition :: WorldState -> Action -> WorldState
@@ -119,7 +91,8 @@ heuristicAStar worldState (Or goals) =
   minimum $ map (heuristicAStar worldState) goals
 heuristicAStar worldState (TakeObj id1) = 
   2 * (length (_world worldState !! x) - y)
-  where Just (x,y) = M.lookup id1 (_positions worldState)
+  where
+    Just (x,y) = M.lookup id1 (_positions worldState)
 heuristicAStar worldState goal@(MoveObj id1 rel id2)
   | isSolution worldState goal = 0
   | otherwise = 
@@ -128,7 +101,7 @@ heuristicAStar worldState goal@(MoveObj id1 rel id2)
                  Nothing  ->
                    if id2 /= "Floor"
                       &&
-                      validRelationship (_world worldState) id1 Above id2 then
+                      relationHolds worldState id1 Above id2 then
                      movesToFreeId1 + 2 * (y1 - y2)
                    else
                      movesToFreeId1 + movesToFreeId2
@@ -158,7 +131,7 @@ heuristicAStar worldState goal@(MoveObj id1 rel id2)
                                2 * length (takeWhile
                                            (\id ->
                                               id /= id2
-                                              && not (validMovement
+                                              && not ( relationValid
                                                       (_objectsInfo worldState)
                                                       id1
                                                       id
@@ -166,7 +139,7 @@ heuristicAStar worldState goal@(MoveObj id1 rel id2)
                                            (_world worldState !! x2))
             
           Just (x1,y1)    = M.lookup id1 (_positions worldState)
-          Just (x2,y2)    = return (1,2)--M.lookup id2 (_positions worldState)
+          Just (x2,y2)    = M.lookup id2 (_positions worldState)
           
       Leftof
         | null h    -> 2

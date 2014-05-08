@@ -19,16 +19,17 @@ findObjects objQ (x:xs) objInfo = searchInStack objQ x ++ findObjects objQ xs ob
 -- | Finds all the ids of the objects matching the given criteria.
 -- Returns (Right list) if the quantifier was a "The" and more 
 -- than one item was found.
-findEntities :: Entity -> World -> Objects -> Either [Id] [Id]
-findEntities (BasicEntity quantifier qObj) wrld objcts =
+findEntities :: Entity -> WorldState -> Either [Id] [Id]
+findEntities (BasicEntity quantifier qObj) worldState  =
   case quantifier of
       The | length matchingObjects > 1  -> Right matchingObjects
           | length matchingObjects == 0 -> Left []
           | otherwise -> Left matchingObjects
       _ -> Left matchingObjects
   where
-    matchingObjects = findObjects qObj wrld objcts
-findEntities (RelativeEntity quantifier qObj loc) wrld objcts =
+    matchingObjects = findObjects qObj (_world worldState)
+                                       (_objectsInfo worldState)
+findEntities (RelativeEntity quantifier qObj loc) worldState =
   if not $ null ambiguity then
     Right ambiguity
   else
@@ -38,14 +39,14 @@ findEntities (RelativeEntity quantifier qObj loc) wrld objcts =
       Left $ [ id1 
              | (rel,id2) <- locationList
              , id1 <- objectList
-             , validRelationship wrld id1 rel id2]
+             , relationHolds worldState id1 rel id2]
   where
-    matchingObjects   = findEntities (BasicEntity quantifier qObj) wrld objcts
-    matchingLocations = findLocations loc wrld objcts
+    matchingObjects   = findEntities (BasicEntity quantifier qObj) worldState
+    matchingLocations = findLocations loc worldState
     leftAmbiguity     = getAmbiguity matchingObjects
     rightAmbiguity    = getAmbiguityLoc matchingLocations
     ambiguity         = leftAmbiguity ++ rightAmbiguity
-findEntities Floor _ _  = Left ["Floor"]
+findEntities Floor _   = Left ["Floor"]
 
 
 -- TODO clean this up
@@ -64,31 +65,31 @@ getAmbiguityLoc result =
 -- | Generates a list of pairs (Relation, Id) given a relation
 -- and an entity description. It finds all the entities which
 -- match the criteria and just pair them with the given relation.
-findLocations :: Location -> World -> Objects -> Either ([(Relation, Id)]) [Id]
-findLocations (Relative rel entity) wrld objcts = 
+findLocations :: Location -> WorldState -> Either ([(Relation, Id)]) [Id]
+findLocations (Relative rel entity) worldState = 
   case entities of
     Left entityList -> Left $ zip (repeat rel) entityList
     Right ambiguity -> Right ambiguity 
   where
-   entities = findEntities entity wrld objcts
+   entities = findEntities entity worldState
 
 -- TODO do some kind of checking so we remove not possible at all goal?
-interpret :: World -> Maybe Id -> Objects -> Command -> Either [Goal] [Id]
-interpret world holding objects tree =
+interpret :: WorldState -> Command -> Either [Goal] [Id]
+interpret worldState tree =
   case tree of
     Take entity 
       | entity == Floor -> Left []
       | otherwise -> 
-          case holding of
+          case _holding worldState of
             Just _ -> Left [] 
-            Nothing -> case findEntities entity world objects of
+            Nothing -> case findEntities entity worldState of
                         Left list        -> Left $ map TakeObj list
                         Right ambiguity  -> Right ambiguity
     Put (Relative relation entity) ->
-      case holding of
+      case _holding worldState of
         Nothing -> Left []
         Just id -> 
-          case  findEntities entity world objects of
+          case  findEntities entity worldState of
             Left list         -> Left $ map (MoveObj id relation) list
             Right ambiguity   -> Right ambiguity
     Move entity loc ->
@@ -101,12 +102,12 @@ interpret world holding objects tree =
           Left $ [fstOperator $ 
                      [sndOperator $ [MoveObj id1 rel id2 
                      | (rel, id2) <- locList
-                     , validMovement objects id1 id2 rel] 
+                     , relationValid (_objectsInfo worldState) id1 id2 rel] 
                  | id1 <- objList]
                  ]
       where
-        matchingObjects = findEntities entity world objects
-        matchingLocations = findLocations loc world objects
+        matchingObjects = findEntities entity worldState
+        matchingLocations = findLocations loc worldState
         fstOperator = selectOperator $ getQuantifier entity 
         sndOperator = selectOperator $ getQuantifierLoc loc
         selectOperator All = And

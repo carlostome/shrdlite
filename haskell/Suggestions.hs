@@ -8,7 +8,8 @@ import           ShrdliteGrammar
 import Plan
 
 suggest :: World -> Maybe Id -> Objects -> [String]
-suggest world holding objects =
+suggest world holding objects = ["Hey"]
+{-
    map (intercalate " " . goalToUtterance objects . snd) $
        take 5 $
        sortBy (\(h1,_) (h2,_) -> compare h2 h1)
@@ -67,3 +68,4 @@ getRelationDescription relation = return $
 
 
 
+-}

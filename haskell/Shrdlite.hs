@@ -28,19 +28,20 @@ jsonMain :: JSObject JSValue -> JSValue
 jsonMain jsinput = makeObj result
     where
       utterance = ok (valFromObj "utterance" jsinput)   :: Utterance
-      world     = ok (fmap (map reverse) $ valFromObj "world"     jsinput)   :: World
+      world     = ok (fmap (map reverse) $ valFromObj "world"jsinput)   :: World
       holding   = ok (valFromObj "holding"   jsinput >>= parseId )      :: Maybe Id
       objects   = ok (valFromObj "objects"   jsinput >>= parseObjects ) :: Objects
-      algorithm = ok (valFromObj "strategy" jsinput >>= parseStrategy ) :: Strategy
+      algorithm = ok (valFromObj "strategy"  jsinput >>= parseStrategy) :: Strategy
 
       trees     = parse command utterance :: [Command]
 
       (goals, ambs) = let (g, a) = unzip $ map findG trees in (concat g, concat a)
 
       findG tree = 
-        case interpret world holding objects tree of
+        case interpret currentWorld tree of
             Left list -> (list, [])
-            Right amb -> ([], amb) 
+            Right amb -> ([], amb)
+                         
       disambiguity = if null ambs then [] else map show ambs
 
       currentWorld = WState holding (getPositions world) world objects
@@ -52,6 +53,7 @@ jsonMain jsinput = makeObj result
                        else if length goals >= 2 then "Ambiguity error!"
                             else if isNothing solution then "Planning error!"
                                  else "Success!"
+                                      
       result    = [("utterance", showJSON utterance),
                    ("trees",     showJSON (map show trees)),
                    ("goals",     if length trees >= 1 then showJSON (map show goals)
@@ -62,11 +64,12 @@ jsonMain jsinput = makeObj result
                    ("output",    showJSON output),
                    ("suggestions", if length goals == 1 && isJust solution then 
                                     showJSON $
-                                       suggest (_world   . snd . fromJust $ solution)
+                                       ["Hola"]
+                                       {-suggest (_world   . snd . fromJust $ solution)
                                                (_holding . snd . fromJust $ solution)
-                                               objects
+                                               objects -}
                                  else
-                                   showJSON $ suggest world holding objects),
+                                   showJSON {-$ suggest world holding objects-}["adio"]),
                    ("disambiguity", if (not $ null disambiguity) 
                                        then showJSON disambiguity 
                                        else JSNull)
