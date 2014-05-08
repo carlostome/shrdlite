@@ -137,8 +137,6 @@ function resetCurrentExample(name) {
         if (value instanceof Array) value = value.join(" ");
         $('#inputexamples').append($('<option>').text(value));
     });
-    $('#suggestions_spinner').empty();
-    $('#suggestions_spinner').append($('<option value="">').text("(Select an example utterance)"));
     $("#dialogue > p").remove();
     resetSVG();
 }
@@ -439,6 +437,8 @@ function userInput(input) {
     var algorithm = $("#algorithm").val();
     sayUtterance("user", userinput);
     $("#suggestions").hide();
+    $('#suggestions_spinner').empty();
+    $('#suggestions_spinner').append($('<option value="">').text("(Select an example utterance)"));
     var ajaxdata = {'world': currentWorld.world,
                     'objects': currentWorld.objects,
                     'holding': currentWorld.holding,
