@@ -43,7 +43,9 @@ jsonMain jsinput = makeObj result
             Right amb -> ([], amb) 
       disambiguity = if null ambs then [] else map show ambs
 
-      solution  = plan algorithm world holding objects (head goals) :: Maybe (Plan,WorldState)
+      currentWorld = WState holding (getPositions world) world objects
+
+      solution  = plan algorithm currentWorld (head goals) :: Maybe (Plan,WorldState)
                   
       output    = if null trees then "Parse error!"
                   else if null goals then "Interpretation error!"
@@ -60,9 +62,9 @@ jsonMain jsinput = makeObj result
                    ("output",    showJSON output),
                    ("suggestions", if length goals == 1 && isJust solution then 
                                     showJSON $
-                                         suggest (_world . snd . fromJust $ solution)
-                                                 (_holding . snd . fromJust $ solution)
-                                                 objects
+                                       suggest (_world   . snd . fromJust $ solution)
+                                               (_holding . snd . fromJust $ solution)
+                                               objects
                                  else
                                    showJSON $ suggest world holding objects),
                    ("disambiguity", if (not $ null disambiguity) 

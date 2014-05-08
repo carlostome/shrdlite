@@ -11,7 +11,7 @@ suggest :: World -> Maybe Id -> Objects -> [String]
 suggest world holding objects =
    map (intercalate " " . goalToUtterance objects . snd) $
        take 5 $
-       sortBy (\(h1,_) (h2,_) -> compare h1 h2)
+       sortBy (\(h1,_) (h2,_) -> compare h2 h1)
             [(heuristicAStar worldState goal,goal)
                | goal <- generateAllSugestions world holding objects]
      where

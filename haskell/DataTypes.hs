@@ -1,5 +1,6 @@
 module DataTypes where
 
+import           Data.Hashable
 import qualified Data.Map        as M
 import           ShrdliteGrammar
 
@@ -14,7 +15,21 @@ type Utterance = [String]
 type World = [[Id]]
 type Objects = M.Map Id Object
 type Plan = [String]
+
 data Strategy = AStar | BFS | LowerCost | PartialOrderPlanner
+
+data WorldState = WState { _holding     :: Maybe Id,
+                           _positions   :: M.Map Id (Int, Int),
+                           _world       :: World,
+                           _objectsInfo :: M.Map Id Object
+			 }
+
+data Statistics = Stat   { _stateSpaceSearched :: Int }
+                
+instance Hashable WorldState where
+  hashWithSalt s (WState holding _ world _) = s `hashWithSalt` holding
+                                              `hashWithSalt` world
+
 
 getPositions :: [[Id]] -> M.Map Id (Int,Int)
 getPositions = snd .
@@ -99,9 +114,9 @@ validMovement info id1 id2 Ontop = canBeOn id1 id2
                   in f
     getSize a    = let (Object sz _ _ )  = getObject a
                   in sz
+validMovement info id1 id2 Under  = 
 validMovement _ _ "Floor" Leftof  = False
 validMovement _ _ "Floor" Rightof = False
 validMovement _ _ "Floor" Beside  = False
-validMovement _ _ "Floor" Under   = False
 validMovement _ "Floor" _ _       = False
 validMovement _ _ _ _             = True
