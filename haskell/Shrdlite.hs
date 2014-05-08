@@ -35,7 +35,13 @@ jsonMain jsinput = makeObj result
 
       trees     = parse command utterance :: [Command]
 
-      goals     = [goal | tree <- trees, goal <- interpret world holding objects tree] :: [Goal]
+      (goals, ambs) = let (g, a) = unzip $ map findG trees in (concat g, concat a)
+
+      findG tree = 
+        case interpret world holding objects tree of
+            Left list -> (list, [])
+            Right amb -> ([], amb) 
+      disambiguity = if null ambs then [] else map show ambs
 
       solution  = plan algorithm world holding objects (head goals) :: Maybe (Plan,WorldState)
                   
@@ -44,7 +50,6 @@ jsonMain jsinput = makeObj result
                        else if length goals >= 2 then "Ambiguity error!"
                             else if isNothing solution then "Planning error!"
                                  else "Success!"
-
       result    = [("utterance", showJSON utterance),
                    ("trees",     showJSON (map show trees)),
                    ("goals",     if length trees >= 1 then showJSON (map show goals)
@@ -53,13 +58,16 @@ jsonMain jsinput = makeObj result
                                    showJSON (duplicate . fst . fromJust $ solution)
 				 else JSNull),
                    ("output",    showJSON output),
-                   ("suggestions",if length goals == 1 && isJust solution then 
+                   ("suggestions", if length goals == 1 && isJust solution then 
                                     showJSON $
                                          suggest (_world . snd . fromJust $ solution)
                                                  (_holding . snd . fromJust $ solution)
                                                  objects
                                  else
-                                   showJSON $ suggest world holding objects)
+                                   showJSON $ suggest world holding objects),
+                   ("disambiguity", if (not $ null disambiguity) 
+                                       then showJSON disambiguity 
+                                       else JSNull)
                   ]
 
 duplicate :: [String] -> [String]

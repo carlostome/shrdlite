@@ -1,3 +1,21 @@
+// Map implementation
+if (!Array.prototype.map)
+{
+  Array.prototype.map = function(fun /*, thisp*/)
+   {
+     var len = this.length;
+     if (typeof fun != "function") throw new TypeError();
+
+     var res = new Array(len);
+     var thisp = arguments[1];
+     for (var i = 0; i < len; i++)
+     {
+       if (i in this)
+         res[i] = fun.call(thisp, this[i], i, this);
+     }
+     return res;
+  };
+}
 
 // URL to the Ajax CGI script:
 var AjaxScript = "cgi-bin/ajaxwrapper.py";
@@ -461,6 +479,14 @@ function userInput(input) {
             result = JSON.parse(result);
         } catch(err) {
             alertError("JSON error:" + err, result);
+        }
+        if (result.disambiguity) {
+          var options = 
+            result.disambiguity.map(function(option) {return "\t· " + option});
+          options = options.join("\n");
+          alert("There is an ambiguity error, "
+            + "please rewrite the sentence using "
+            + "one of the following options:\n\n" + options);
         }
         if (result.suggestions) {
           var suggestions = $("#suggestions");
