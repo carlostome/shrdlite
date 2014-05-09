@@ -497,6 +497,10 @@ function userInput(input) {
             });
           suggestions.show();
         }
+        if (result.states) {
+          $("#n_states").text(result.states);
+          $("#states").show();
+        }
         debugResult(result);
         sayUtterance("system", result.output);
         if (result.state) {
