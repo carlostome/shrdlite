@@ -3,7 +3,7 @@ module Suggestions where
 import           Data.Char       (toLower)
 import           Data.List       (intercalate, sortBy, minimumBy)
 import qualified Data.Map        as M
-import           Data.Maybe      (isJust)
+import           Data.Maybe      (isJust, fromJust)
 import           DataTypes
 import           ShrdliteGrammar
 import Plan
@@ -49,39 +49,75 @@ goalToUtterance worldState goal =
 
 getObjectDescription :: WorldState -> Id -> [String]
 getObjectDescription worldState id
-   | id == "Floor" = ["the", "floor"]
-   | otherwise =
-     let Just obj = M.lookup id (_objectsInfo worldState)
-         (Object size color form) = fewestAttributesToIdentifyObject worldState obj
-         sizeList =
-           if size == AnySize then []
-           else                    [show size]
-         colorList =
-           if color == AnyColor then []
-           else                      [show color]
-         formList = 
-           if form == AnyForm then ["object"]
-           else                    [show form]
-     in  map (map toLower) $ concat [sizeList, colorList, formList]
+  | id == "Floor" = ["the", "floor"]
+  | otherwise =
+   let Just obj = M.lookup id (_objectsInfo worldState)
+       ent = fewestAttributesToIdentifyObject worldState obj id
+   in
+     case ent of
+       BasicEntity _ obj -> objAttrsToString obj
+       RelativeEntity q1 thisObj (Relative rel (BasicEntity q2 obj2)) ->
+         objAttrsToString thisObj ++ ((map toLower $ show rel) : "the" : objAttrsToString obj2)
+
+-- | Returns a list of strings of the attributes of an object
+objAttrsToString :: Object -> [String]
+objAttrsToString (Object size color form) =
+  let
+    sizeList =
+      if size == AnySize then []
+      else                    [show size]
+    colorList =
+      if color == AnyColor then []
+      else                      [show color]
+    formList = 
+      if form == AnyForm then ["object"]
+      else                    [show form]
+  in map (map toLower) $ concat [sizeList, colorList, formList]
 
 -- | For a given object returns an object with the fewest number of attributes
 -- for identifying it uniquely in the world
 -- The entities are created with the "The" quantifier, to make sure only unique
 -- matches are returned through the "Left" constructor. This criterion is used
 -- to filter the list.
-fewestAttributesToIdentifyObject :: WorldState -> Object -> Object
-fewestAttributesToIdentifyObject worldState oobj@(Object size color form) = 
-    let allCombEnts = map (BasicEntity The) [Object s c form | s <- [AnySize, size]
-                                                             , c <- [AnyColor, color]]
+fewestAttributesToIdentifyObject :: WorldState -> Object -> Id -> Entity
+fewestAttributesToIdentifyObject worldState obj@(Object size color form) id = 
+    let allCombEnts = [BasicEntity The (Object s c form) | s <- [AnySize, size]
+                                                         , c <- [AnyColor, color]]
         uniqueEntities = filter (isLeft . (\ent -> findEntities ent worldState)) allCombEnts
-        uniqueObjects = [obj | (BasicEntity The obj) <- uniqueEntities]
     in
-      if null uniqueObjects then oobj
-      else                       minimumBy orderObjsByDescrLength uniqueObjects 
+      if null uniqueEntities then
+        let allObjs = map snd $ M.toList $ _objectsInfo worldState
+            allIds = concat $ _world worldState
+            allRels = [Beside, Leftof, Rightof, Above, Ontop, Under, Inside]
+            allRelEntities = [RelativeEntity Any obj (Relative rel (BasicEntity The oobj)) |
+                              rel <- allRels, oobj <- allObjs]
+            validRels = filter (\(lokId, rel) -> relationHolds worldState id rel lokId)
+                          [(localId, rel) | localId <- allIds, rel <- allRels]
+            validObjRels =
+              map (\(lokId, rel) -> (fromJust $ M.lookup lokId (_objectsInfo worldState), rel))
+                validRels
+            smallest = minimumBy crazyOrderingFunction validObjRels
+--            (BasicEntity _ smallestDescObj) =
+--              fewestAttributesToIdentifyObject worldState (fst smallest) ""
+        in
+          RelativeEntity The obj (Relative (snd smallest) (BasicEntity The (fst smallest)))
+      else minimumBy orderEntsByDescrLength uniqueEntities
+
+-- | Does the drill!
+crazyOrderingFunction :: (Object, Relation) -> (Object, Relation) -> Ordering
+crazyOrderingFunction p1 p2 = orderObjByDescr (fst p1) (fst p2)
+
+-- | Order of Entities with respect to their description length
+orderEntsByDescrLength :: Entity -> Entity -> Ordering
+orderEntsByDescrLength (BasicEntity _ obj1) (BasicEntity _ obj2) =
+  orderObjByDescr obj1 obj2
+orderEntsByDescrLength (RelativeEntity _ _ (Relative _ bEnt1))
+                       (RelativeEntity _ _ (Relative _ bEnt2)) =
+  orderEntsByDescrLength bEnt1 bEnt2
 
 -- | Order of Objects with respect to their description length
-orderObjsByDescrLength :: Object -> Object -> Ordering
-orderObjsByDescrLength obj1 obj2
+orderObjByDescr :: Object -> Object -> Ordering
+orderObjByDescr obj1 obj2
   | descriptionLength obj1 < descriptionLength obj2 = LT
   | descriptionLength obj1 > descriptionLength obj2 = GT
   | otherwise = EQ
