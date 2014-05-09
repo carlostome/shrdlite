@@ -83,14 +83,14 @@ interpret worldState tree =
           case _holding worldState of
             Just _ -> Left [] 
             Nothing -> case findEntities entity worldState of
-                        Left list        -> Left $ map TakeObj list
+                        Left list        -> Left $ [Or $ map TakeObj list]
                         Right ambiguity  -> Right ambiguity
     Put (Relative relation entity) ->
       case _holding worldState of
         Nothing -> Left []
         Just id -> 
           case  findEntities entity worldState of
-            Left list         -> Left $ map (MoveObj id relation) list
+            Left list         -> Left $ [Or $ map (MoveObj id relation) list]
             Right ambiguity   -> Right ambiguity
     Move entity loc ->
       if not $ null ambiguity then
