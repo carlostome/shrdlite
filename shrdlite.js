@@ -499,7 +499,7 @@ function userInput(input) {
         }
         if (result.states) {
           $("#n_states").text(result.states);
-          $("#states").show();
+          $("#states_p").show();
         }
         debugResult(result);
         sayUtterance("system", result.output);
