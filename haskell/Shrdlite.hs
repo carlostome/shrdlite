@@ -18,7 +18,7 @@ import           Text.JSON
 import           DataTypes
 import           Interpreter
 import           Plan
-import Suggestions
+import           Suggestions
 
 main :: IO ()
 main = getContents >>= putStrLn . encode . jsonMain . ok . decode
@@ -28,7 +28,7 @@ jsonMain :: JSObject JSValue -> JSValue
 jsonMain jsinput = makeObj result
     where
       utterance = ok (valFromObj "utterance" jsinput)   :: Utterance
-      world     = ok (fmap (map reverse) $ valFromObj "world"jsinput)   :: World
+      world     = ok (fmap (map reverse) $ valFromObj "world" jsinput)  :: World
       holding   = ok (valFromObj "holding"   jsinput >>= parseId )      :: Maybe Id
       objects   = ok (valFromObj "objects"   jsinput >>= parseObjects ) :: Objects
       algorithm = ok (valFromObj "strategy"  jsinput >>= parseStrategy) :: Strategy
@@ -42,7 +42,9 @@ jsonMain jsinput = makeObj result
             Left list -> (list, [])
             Right amb -> ([], amb)
                          
-      disambiguity = if null ambs then [] else map show ambs
+      disambiguity = if null ambs 
+                       then [] 
+                       else map (unwords . getObjectDescription currentWorld) ambs
 
       currentWorld = WState holding (getPositions world) world objects
 
@@ -64,15 +66,14 @@ jsonMain jsinput = makeObj result
                                    showJSON (duplicate finalPlan)
 				 else JSNull),
                    ("output",    showJSON output),
-                   ("suggestions", if length goals == 1 && isJust solution then 
-                                    showJSON $
-                                       suggest finalWorld
-                                   else
-                                     showJSON $
-                                       suggest currentWorld),
-                   ("disambiguity", if (not $ null disambiguity) 
-                                       then showJSON disambiguity 
-                                       else JSNull)
+                   ("suggestions", if length goals == 1 && isJust solution 
+                                    then 
+                                      showJSON $ suggest finalWorld
+                                    else
+                                      showJSON $ suggest currentWorld),
+                   ("disambiguity", if null disambiguity 
+                                       then JSNull  
+                                       else showJSON disambiguity )
                   ]
 
 duplicate :: [String] -> [String]
