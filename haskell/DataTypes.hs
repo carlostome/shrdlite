@@ -70,7 +70,7 @@ relationValid info id1 id2 Ontop
   | size1 > size2          = False
   | form1 == Ball          = form2 == Box 
   | form2 == Ball          = False
-  | form2 == Box           = not (form1 == Pyramid || form1 == Plank)
+  | form2 == Box           = not (form1 == Pyramid || form1 == Plank || form1 == Box)
                              || size2 > size1
   | form1 == Box           = and [ size1 == size2
                                  , or [ form2 == Table
