@@ -9,52 +9,49 @@ import Plan
 import Interpreter
 
 suggest :: WorldState -> [String]
-suggest ws =
-   map (intercalate " " . goalToUtterance objects world . snd) $
+suggest worldState =
+   map (intercalate " " . goalToUtterance worldState . snd) $
        take 5 $
-       sortBy (\(h1,_) (h2,_) -> compare h2 h1)
-            [(heuristicAStar worldState goal,goal)
-               | goal <- generateAllSugestions world holding objects]
-     where
-       worldState = WState holding (getPositions world) world objects
+              [(heuristicAStar worldState goal,goal)
+                 | goal <- generateAllSugestions worldState]
        
-generateAllSugestions :: World -> Maybe Id -> Objects -> [Goal]
-generateAllSugestions world holding objects =  
-  case holding of
+generateAllSugestions :: WorldState -> [Goal]
+generateAllSugestions worldState =  
+  case _holding worldState of
    Just id -> [ MoveObj  id rel id2 | rel <- relations
-                                    , id2 <- "Floor" : (map fst $ M.toList objects)
-                                    , relationValid objects id id2 rel
+                                    , id2 <- "Floor" : (map fst $ M.toList (_objectsInfo worldState))
+                                    , relationValid (_objectsInfo worldState) id id2 rel
                                     , id /= id2]
 
    Nothing -> [ MoveObj  id1 rel id2 | rel <- relations
-                                     , id1 <- map fst $ M.toList objects
-                                     , id2 <- "Floor" : (map fst $ M.toList objects)
-                                     , relationValid objects id1 id2 rel
+                                     , id1 <- map fst $ M.toList (_objectsInfo worldState)
+                                     , id2 <- "Floor" : (map fst $ M.toList (_objectsInfo worldState))
+                                     , relationValid (_objectsInfo worldState) id1 id2 rel
                                      , id1 /= id2]
               ++
-              [ TakeObj  id1 | id1 <- map fst $ M.toList objects]
+              [ TakeObj  id1 | id1 <- map fst $ M.toList (_objectsInfo worldState)]
 
 relations :: [Relation]
 relations = [Beside , Leftof , Rightof , Above , Ontop , Under , Inside]
   
 -- | Translate a goal to an utterance for displaying in the suggestions list
-goalToUtterance :: Objects -> World -> Goal -> Utterance
-goalToUtterance objs world goal =
+goalToUtterance ::  WorldState -> Goal -> Utterance
+goalToUtterance worldState goal =
   case goal of
-    TakeObj id1 -> ["take", "the"] ++ (getObjectDescription objs world id1)
+    TakeObj id1 -> ["take", "the"] ++ (getObjectDescription worldState id1)
     MoveObj id1 rel id2 ->
       ["put", "the"]
-      ++ getObjectDescription objs world id1
+      ++ getObjectDescription worldState id1
       ++ getRelationDescription rel 
-      ++ getObjectDescription objs world id2
+      ++ getObjectDescription worldState id2
 
-getObjectDescription :: Objects -> World -> Id -> [String]
-getObjectDescription objects world id
+getObjectDescription :: WorldState -> Id -> [String]
+getObjectDescription worldState id
    | id == "Floor" = ["the", "floor"]
    | otherwise =
 --     let Just obj = M.lookup id objects
 --         (Object size color form) = fewestAttributesToIdentifyObject objects obj world
-     let Just (Object size color form) = M.lookup id objects
+     let Just (Object size color form) = M.lookup id (_objectsInfo worldState)
      in  map (map toLower) [show size,show color, show form]
 
 -- | For a given object returns an object with the fewest number of attributes
@@ -62,12 +59,12 @@ getObjectDescription objects world id
 -- The entities are created with the "The" quantifier, to make sure only unique
 -- matches are returned through the "Left" constructor. This criterion is used
 -- to filter the list.
-fewestAttributesToIdentifyObject :: Objects -> Object -> World -> Object
-fewestAttributesToIdentifyObject objs (Object size color form) world = 
+fewestAttributesToIdentifyObject :: WorldState -> Object -> Object
+fewestAttributesToIdentifyObject worldState (Object size color form) = 
     let allCombEnts = map (BasicEntity The) [Object s c f | s <- [AnySize, size]
                                                           , c <- [AnyColor, color]
                                                           , f <- [AnyForm, form]]
-        uniqueEntities = filter (isLeft . (\ent -> findEntities ent world objs)) allCombEnts
+        uniqueEntities = filter (isLeft . (\ent -> findEntities ent worldState)) allCombEnts
         uniqueObjects = [obj | (BasicEntity The obj) <- uniqueEntities]
     in minimumBy orderObjsByDescrLength uniqueObjects 
 

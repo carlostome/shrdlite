@@ -86,9 +86,9 @@ transition worldState action =
 
 heuristicAStar :: WorldState -> Goal -> Int
 heuristicAStar worldState (And goals) =
-  maximum $ map (heuristicAStar worldState) goals
+  maximum $ 2 : map (heuristicAStar worldState) goals
 heuristicAStar worldState (Or goals) =
-  minimum $ map (heuristicAStar worldState) goals
+  minimum $ 2 : map (heuristicAStar worldState) goals
 heuristicAStar worldState (TakeObj id1) = 
   2 * (length (_world worldState !! x) - y)
   where
@@ -101,7 +101,7 @@ heuristicAStar worldState goal@(MoveObj id1 rel id2)
                  Nothing  ->
                    if id2 /= "Floor"
                       &&
-                      relationHolds worldState id1 Above id2 then
+                      relationHolds worldState id2 Above id1 then
                      movesToFreeId1 + 2 * (y1 - y2)
                    else
                      movesToFreeId1 + movesToFreeId2

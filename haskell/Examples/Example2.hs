@@ -14,7 +14,7 @@ worldE   = [["wb"],[],["xb","bb","yb","lb"],["rbox"]]
 
 objects :: Objects
 objects = M.fromList [ ("xb",Object Large Black Plank)
-		     , ("bb",Object Large Blue Plank)
+		     , ("bb",Object Small Blue Pyramid)
 		     , ("yb",Object Large Yellow Brick)
 		     , ("lb",Object Large White Brick)
 		     , ("wb",Object Large White Ball)
@@ -32,14 +32,9 @@ pos = M.fromList [ ("xb",(2,1))
        
 utterance =["put", "the", "white", "ball", "on", "the", "black", "plank"]
 
-goals :: Utterance -> [Goal]
-goals utterance =
-	let trees = parse command utterance :: [Command] in
-		[goal | tree <- trees, goal <- interpret worldE Nothing objects tree] :: [Goal]
 
-
-worldS = WState { holding     = Nothing,
-                  positions   = pos,
-                  world       = worldE,
-                  objectsInfo = objects
+worldS = WState { _holding     = Nothing,
+                  _positions   = pos,
+                  _world       = worldE,
+                  _objectsInfo = objects
 		}

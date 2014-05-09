@@ -53,23 +53,23 @@ jsonMain jsinput = makeObj result
                        else if length goals >= 2 then "Ambiguity error!"
                             else if isNothing solution then "Planning error!"
                                  else "Success!"
-                                      
+
+      Just (finalPlan, finalWorld) =  solution
+
       result    = [("utterance", showJSON utterance),
                    ("trees",     showJSON (map show trees)),
                    ("goals",     if length trees >= 1 then showJSON (map show goals)
                                  else JSNull),
                    ("plan",      if length goals  == 1 && isJust solution then
-                                   showJSON (duplicate . fst . fromJust $ solution)
+                                   showJSON (duplicate finalPlan)
 				 else JSNull),
                    ("output",    showJSON output),
                    ("suggestions", if length goals == 1 && isJust solution then 
                                     showJSON $
-                                       ["Hola"]
-                                       {-suggest (_world   . snd . fromJust $ solution)
-                                               (_holding . snd . fromJust $ solution)
-                                               objects -}
-                                 else
-                                   showJSON {-$ suggest world holding objects-}["adio"]),
+                                       suggest finalWorld
+                                   else
+                                     showJSON $
+                                       suggest currentWorld),
                    ("disambiguity", if (not $ null disambiguity) 
                                        then showJSON disambiguity 
                                        else JSNull)
