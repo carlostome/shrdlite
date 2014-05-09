@@ -49,8 +49,8 @@ getObjectDescription :: WorldState -> Id -> [String]
 getObjectDescription worldState id
    | id == "Floor" = ["the", "floor"]
    | otherwise =
-     let Just obj = M.lookup id objects
-         (Object size color form) = fewestAttributesToIdentifyObject objects obj world
+     let Just obj = M.lookup id (_objectsInfo worldState)
+         (Object size color form) = fewestAttributesToIdentifyObject worldState obj 
 
      in  map (map toLower) [show size,show color, show form]
 
