@@ -3,6 +3,7 @@ module Suggestions where
 import           Data.Char       (toLower)
 import           Data.List       (intercalate, sortBy, minimumBy)
 import qualified Data.Map        as M
+import           Data.Maybe      (isJust)
 import           DataTypes
 import           ShrdliteGrammar
 import Plan
@@ -40,8 +41,9 @@ goalToUtterance worldState goal =
   case goal of
     TakeObj id1 -> ["take", "the"] ++ (getObjectDescription worldState id1)
     MoveObj id1 rel id2 ->
-      ["put", "the"]
-      ++ getObjectDescription worldState id1
+      (if isJust $ _holding worldState then ["put", "it"]
+      else
+        ["put", "the"] ++ getObjectDescription worldState id1)
       ++ getRelationDescription rel 
       ++ getObjectDescription worldState id2
 
@@ -52,10 +54,10 @@ getObjectDescription worldState id
      let Just obj = M.lookup id (_objectsInfo worldState)
          (Object size color form) = fewestAttributesToIdentifyObject worldState obj
          sizeList =
-           if size == AnySize then ([] :: [String])
+           if size == AnySize then []
            else                    [show size]
          colorList =
-           if color == AnyColor then ([] :: [String])
+           if color == AnyColor then []
            else                      [show color]
          formList = 
            if form == AnyForm then ["object"]
@@ -68,13 +70,14 @@ getObjectDescription worldState id
 -- matches are returned through the "Left" constructor. This criterion is used
 -- to filter the list.
 fewestAttributesToIdentifyObject :: WorldState -> Object -> Object
-fewestAttributesToIdentifyObject worldState (Object size color form) = 
-    let allCombEnts = map (BasicEntity The) [Object s c f | s <- [AnySize, size]
-                                                          , c <- [AnyColor, color]
-                                                          , f <- [AnyForm, form]]
+fewestAttributesToIdentifyObject worldState oobj@(Object size color form) = 
+    let allCombEnts = map (BasicEntity The) [Object s c form | s <- [AnySize, size]
+                                                             , c <- [AnyColor, color]]
         uniqueEntities = filter (isLeft . (\ent -> findEntities ent worldState)) allCombEnts
         uniqueObjects = [obj | (BasicEntity The obj) <- uniqueEntities]
-    in minimumBy orderObjsByDescrLength uniqueObjects 
+    in
+      if null uniqueObjects then oobj
+      else                       minimumBy orderObjsByDescrLength uniqueObjects 
 
 -- | Order of Objects with respect to their description length
 orderObjsByDescrLength :: Object -> Object -> Ordering
