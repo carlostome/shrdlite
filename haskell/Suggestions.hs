@@ -50,9 +50,17 @@ getObjectDescription worldState id
    | id == "Floor" = ["the", "floor"]
    | otherwise =
      let Just obj = M.lookup id (_objectsInfo worldState)
-         (Object size color form) = fewestAttributesToIdentifyObject worldState obj 
-
-     in  map (map toLower) [show size,show color, show form]
+         (Object size color form) = fewestAttributesToIdentifyObject worldState obj
+         sizeList =
+           if size == AnySize then ([] :: [String])
+           else                    [show size]
+         colorList =
+           if color == AnyColor then ([] :: [String])
+           else                      [show color]
+         formList = 
+           if form == AnyForm then ["object"]
+           else                    [show form]
+     in  map (map toLower) $ concat [sizeList, colorList, formList]
 
 -- | For a given object returns an object with the fewest number of attributes
 -- for identifying it uniquely in the world
