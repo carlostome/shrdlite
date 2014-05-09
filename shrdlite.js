@@ -486,7 +486,7 @@ function userInput(input) {
           options = options.join("\n");
           alert("There is an ambiguity error, "
             + "please rewrite the sentence using "
-            + "one of the following options:\n\n" + options);
+            + "giving more information. Suggestions:\n\n" + options);
         }
         if (result.suggestions) {
           var suggestions = $("#suggestions");
