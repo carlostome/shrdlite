@@ -48,7 +48,7 @@ jsonMain jsinput = makeObj result
 
       currentWorld = WState holding (getPositions world) world objects
 
-      solution  = plan algorithm currentWorld (head goals) :: Maybe (Plan,WorldState)
+      (solution,stats) = plan algorithm currentWorld (head goals) :: (Maybe (Plan,WorldState), Int)
                   
       output    = if null trees then "Parse error!"
                   else if null goals then "Interpretation error!"
@@ -73,8 +73,8 @@ jsonMain jsinput = makeObj result
                                       showJSON $ suggest currentWorld),
                    ("disambiguity", if null disambiguity 
                                        then JSNull  
-                                       else showJSON disambiguity )
-                  ]
+                                       else showJSON disambiguity ),
+                  ("states", showJSON $ stats) ]
 
 duplicate :: [String] -> [String]
 duplicate [] = []

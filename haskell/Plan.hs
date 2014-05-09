@@ -180,8 +180,8 @@ instance Ord Prio where
 
 
 -- | Bfs on the tree of worlds
-plan :: Strategy -> WorldState -> Goal -> Maybe (Plan,WorldState)
-plan strategy initialWorld goal = go initialQueue S.empty
+plan :: Strategy -> WorldState -> Goal -> (Maybe (Plan,WorldState),Int)
+plan strategy initialWorld goal = go initialStats initialQueue S.empty
   where
         initialQueue     = PQ.singleton (PQ.Entry (Prio (0,0))
                                                   (initialWorld,[]))
@@ -189,15 +189,15 @@ plan strategy initialWorld goal = go initialQueue S.empty
                              AStar     -> heuristicAStar
                              BFS       -> const2 0
                              LowerCost -> const2 0
-
-        go queue visited =
+        initialStats     = 0
+        go stat queue visited =
           case PQ.viewMin queue of
-            Nothing  -> Nothing
+            Nothing  -> (Nothing, stat)
             Just (PQ.Entry (Prio (_,oldCost)) (world,oldActions),rest) ->
                  if isSolution world goal then
-                   Just ( map show . reverse $ oldActions, world)
+                   (Just (map show . reverse $ oldActions, world), stat)
                  else
-                   go (PQ.union rest (PQ.fromList newWorlds)) newVisited
+                   go (stat + 1) (PQ.union rest (PQ.fromList newWorlds)) newVisited
                      where
                        newWorlds =
                          map (\(w,a) -> PQ.Entry
