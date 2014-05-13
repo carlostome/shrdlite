@@ -1,0 +1,24 @@
+We started to implement a partial order planner as an advanced planning
+algorithm but got stuck at a half-finished state.
+
+The basic building blocks of this algorithm are move actions with their 
+preconditions and effects. A partial order of the actions and causal links 
+between an effects and an preconditions.
+move actions are partially instansiated -- example, explanation
+  physical constraints, transitive special relations etc.
+  
+It works by firstly setting up a start state (as an action that precedes
+every other action, has no preconditions and the start state as it's effects)
+and a goal state (as an action thet 'procedes' every other action with the
+goal as an precondition and nothing as effects)
+The goal state is put on the agenda (a queue of precondition predicates we 
+want to satisfy)
+  
+ 
+The algorithm then chooses a goal on the agenda (if it's empty, we're done) 
+It instansiates an appropriate action (one that has the goal in it's effects)
+The chosen action is then ordered before the goal we wanted to achive.
+A causal link is drawn between the chosen action's effect and 
+the goal
+We now check if any action interferes with any causal link. 
+
