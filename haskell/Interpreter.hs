@@ -80,11 +80,9 @@ interpret worldState tree =
     Take entity 
       | entity == Floor -> Left []
       | otherwise -> 
-          case _holding worldState of
-            Just _ -> Left [] 
-            Nothing -> case findEntities entity worldState of
-                        Left list        -> Left $ [Or $ map TakeObj list]
-                        Right ambiguity  -> Right ambiguity
+          case findEntities entity worldState of
+            Left list       -> Left $ [Or $ map TakeObj list]
+            Right ambiguity -> Right ambiguity
     Put (Relative relation entity) ->
       case _holding worldState of
         Nothing -> Left []
