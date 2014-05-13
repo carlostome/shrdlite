@@ -89,8 +89,8 @@ fewestAttributesToIdentifyObject worldState obj@(Object size color form) id =
         let allObjs = map snd $ M.toList $ _objectsInfo worldState
             allIds = concat $ _world worldState
             allRels = [Beside, Leftof, Rightof, Above, Ontop, Under, Inside]
-            validRelPairs = filter (\(lokId, rel) -> relationHolds worldState id rel lokId)
-                          [(localId, rel) | localId <- allIds, rel <- allRels]
+            validRelPairs = [(localId, rel) | localId <- allIds, rel <- allRels
+                            , relationHolds worldState id rel localId]
 
             allRelEnts =
               [(RelativeEntity Any (Object s1 c1 form)
