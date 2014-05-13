@@ -5,7 +5,7 @@
 -- Test from the command line:
 -- runhaskell Shrdlite.hs < ../examples/medium.json
 
-module Shrdlite where
+module Main where
 
 import           CombinatorParser
 import           Control.Monad    (foldM, liftM)

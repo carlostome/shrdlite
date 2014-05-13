@@ -83,6 +83,13 @@ relationValid info id1 id2 Ontop
     (Object size2 _ form2) =
       maybe (error $ "getObject" ++ show id2) id (M.lookup id2 info)
 
+relationValid info id1 id2 Inside
+  | id1 == "Floor" || id2 == "Floor"  || form2 /= Box = False
+  | otherwise = relationValid info id1 id2 Ontop
+  where
+    (Object size2 _ form2) =
+      maybe (error $ "getObject" ++ show id2) id (M.lookup id2 info)
+    
 relationValid _ "Floor" _ Under   = True
 relationValid _ _ "Floor" Under   = False
 relationValid _ _ "Floor" Leftof  = False
