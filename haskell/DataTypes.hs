@@ -21,7 +21,7 @@ data Strategy = AStar | BFS | LowerCost | PartialOrderPlanner
 data WorldState = WState { _holding     :: Maybe Id,
                            _positions   :: M.Map Id (Int, Int),
                            _world       :: World,
-                           _objectsInfo :: M.Map Id Object }
+                           _objectsInfo :: M.Map Id Object } deriving Show
 
 instance Hashable WorldState where
   hashWithSalt s (WState holding _ world _) = s `hashWithSalt` holding
@@ -55,7 +55,9 @@ relationHolds worldState id1 rel id2 =
     Ontop   -> x1 == x2 && y1 - y2 == 1
     Inside  -> x1 == x2 && y1 - y2 == 1
     Under   -> x1 == x2 && y1 < y2
-    where Just (x1,y1) = M.lookup id1 (_positions worldState)
+    where (x1,y1) = maybe (error $ "relationHolds: " ++ show id1 ++ "\n" ++ show worldState) 
+                          id
+                          (M.lookup id1 (_positions worldState))
           Just (x2,y2) = case id2 of
                            "Floor" -> return (x1,0)
                            _       -> M.lookup id2 (_positions worldState)
