@@ -41,7 +41,7 @@ findEntities (RelativeEntity quantifier qObj loc) worldState =
              , id1 <- objectList
              , relationHolds worldState id1 rel id2]
   where
-    matchingObjects   = findEntities (BasicEntity quantifier qObj) worldState
+    matchingObjects   = findEntities (BasicEntity Any qObj) worldState
     matchingLocations = findLocations loc worldState
     leftAmbiguity     = getAmbiguity matchingObjects
     rightAmbiguity    = getAmbiguityLoc matchingLocations
