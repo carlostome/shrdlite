@@ -89,23 +89,32 @@ fewestAttributesToIdentifyObject worldState obj@(Object size color form) id =
         let allObjs = map snd $ M.toList $ _objectsInfo worldState
             allIds = concat $ _world worldState
             allRels = [Beside, Leftof, Rightof, Above, Ontop, Under, Inside]
-            allRelEntities = [RelativeEntity Any obj (Relative rel (BasicEntity The oobj)) |
-                              rel <- allRels, oobj <- allObjs]
-            validRels = filter (\(lokId, rel) -> relationHolds worldState id rel lokId)
+            validRelPairs = filter (\(lokId, rel) -> relationHolds worldState id rel lokId)
                           [(localId, rel) | localId <- allIds, rel <- allRels]
-            validObjRels =
-              map (\(lokId, rel) -> (fromJust $ M.lookup lokId (_objectsInfo worldState), rel))
-                validRels
-            smallest = minimumBy crazyOrderingFunction validObjRels
---            (BasicEntity _ smallestDescObj) =
---              fewestAttributesToIdentifyObject worldState (fst smallest) ""
+
+            allRelEnts =
+              [(RelativeEntity Any (Object s1 c1 form)
+                (Relative rel (BasicEntity The (Object s c frm)))) |
+                (lokId, rel) <- validRelPairs
+                , (Object sz clr frm) <- [fromJust $ M.lookup lokId (_objectsInfo worldState)]
+                , s <- [AnySize, sz]
+                , c <- [AnyColor, clr]
+                , s1 <- [AnySize, size]
+                , c1 <- [AnyColor, color]
+                ]
+            validRels = filter (isLeft . \ent -> findEntities ent worldState) allRelEnts
         in
-          RelativeEntity The obj (Relative (snd smallest) (BasicEntity The (fst smallest)))
+            minimumBy orderRelEntByBothObjects validRels
       else minimumBy orderEntsByDescrLength uniqueEntities
 
--- | Does the drill!
-crazyOrderingFunction :: (Object, Relation) -> (Object, Relation) -> Ordering
-crazyOrderingFunction p1 p2 = orderObjByDescr (fst p1) (fst p2)
+orderRelEntByBothObjects :: Entity -> Entity -> Ordering
+orderRelEntByBothObjects (RelativeEntity _ obj11 (Relative _ (BasicEntity _ obj12)))
+                         (RelativeEntity _ obj21 (Relative _ (BasicEntity _ obj22)))
+  | descriptionLength obj11 + descriptionLength obj12 <
+    descriptionLength obj21 + descriptionLength obj22 = LT
+  | descriptionLength obj11 + descriptionLength obj12 >
+    descriptionLength obj21 + descriptionLength obj22 = GT
+  | otherwise                                         = EQ 
 
 -- | Order of Entities with respect to their description length
 orderEntsByDescrLength :: Entity -> Entity -> Ordering
