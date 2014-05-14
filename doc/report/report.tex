@@ -82,10 +82,166 @@
 	\section{Extensions}
 
 	\subsection{Handling of quantifiers}
-	\subsection{Ambiguity resolution}
+
+          The basic project just requires to handle the all quantifier. That means it is enough to
+          detect the list of objects matching the description (and the list of objects matching the destination if the goal is \texttt{Move}, merging them later).
+
+          For this extension, we have to correctly process all the quantifiers:
+
+          \begin{itemize}
+            \item {\bf The}: this can lead to an ambiguity ("the ball" implies there has to be only one ball, otherwise it is an ambiguity error).
+            \item {\bf Any}: this is how we processed all before (this is, just pick one among all the matches).
+            \item {\bf All}: we changed this, so now it actually matches everything (we will explain this during in the following section).
+          \end{itemize}
+
+          \subsubsection{Composed goals}
+          Now we need to handle with composed goals (this is, \textit{put all balls in a box} should
+          generate a goal composed by all the boxes in some box). For this purpose, we redefine the goal datatype:
+
+\begin{verbatim}
+data Goal = And [Goal]
+     | Or [Goal]
+     | MoveObj Id Relation Id
+     | TakeObj Id deriving (Eq, Show)
+\end{verbatim}
+
+          We don't think there is much room for explanation here, a goal is either taking an object or moving it, or a set of those. There are two kinds of sets, the \texttt{and} (conjuction) and the \texttt{or} (disjunction).
+
+          Let's go back again to the list of quantifiers and relate them to the goals.
+
+          \begin{itemize}
+            \item {\bf The}: this generates a single goal (represented as a disjunctive list of one element). Useful to generate all the goals in an easy way (explained on the next code snippet).
+            \item {\bf Any}: this generates a disjunctive goal.
+            \item {\bf All}: this generates a conjunctive goal.
+          \end{itemize}
+
+          However, this is not that simple, what happens when we have something like \textit{put the blue ball in a box}. This should generate a disjunctive goal composed of all the possible
+          goals involving the blue ball in a box. Let's say we have, in our world, a blue ball \textit{b}
+          and two boxes \textit{b1} and \textit{b2}. The goal would be something like:
+
+\begin{verbatim}
+  Or [MoveObj b Ontop b1
+  , MoveObj b Ontop b2]
+\end{verbatim}
+
+          After some struggling, we came up with an easy solution to this problem, using list comprehensions.
+          First, we have to select the operators using the quantifiers, and then generate all the valid possibilities.
+
+\begin{verbatim}
+let locList = matchingLocations
+    objList = matchingObjects
+in
+  [fstOperator $
+    [sndOperator $ 
+      [MoveObj id1 rel id2
+      | (rel, id2) <- locList
+      , validMovement 
+          objects id1 id2 rel]
+  | id1 <- objList] ]
+\end{verbatim}
+	
+        \subsection{Ambiguity resolution}
+          The approach here was to modify the \texttt{findEntities} function so it can return
+           either a list of matches or a list of conflicts. As an example, if we have two 
+           balls and receive the utterance "take the ball", then we have a conflict because 
+           we are requiring an specific object (using the quantifier \texttt{the}) and there            exist two objects matching the description.
+
+          If the interpret don't find any ambiguity then the goal is sent two the planner 
+          and everything goes on as before. However, if any ambiguity is found, then the 
+          list of ids is sent to another function which tries to remove the disambiguity 
+          (this is, giving unique descriptions to every id). After finding unique 
+          descriptions, they are sent as a response and showed in a pop up to the user.
+
+        \subsection{Handling bigger worlds}
+        The breadth-first search strategy worked well at first: we were getting solutions 
+        fairly quick in most cases. However, after making sure we could handle the small 
+        world, we moved to the medium and complex examples and here we got a lot of timeouts 
+        (even though we raised from 5 to 50 seconds the time frame).
+
+        The problem was we had to explore too many states in order to find a solution. The 
+        number of possible states in these worlds is huge so we needed a way of prioritizing 
+        some states. The first that came up to our minds were some heuristics functions, thus 
+        we started thinking about the different cases and created some functions to use with 
+        the A* algorithm. We struggled a little bit at the beginning since due to some mistakes
+        some of our heuristic functions were overstimating (so they weren't admissibles).
+        
+        \subsubsection{Proposed heuristics}
+        In this section we describe briefly the implemented heuristics (check the code for
+         further information, concretely the \texttt{Plan.hs} file). We defined different 
+         heuristics for different relations (we didn't feel it was necessary to use them 
+         for just taking an object or putting it back since the computation time took by the
+         functions was not worth it). In the following definitions, we will refer to the 
+         following terms:
+
+         \begin{itemize}
+          \item Object: the first part of the relation.
+          \item Destination: the second part of the relation.
+          \item $ontop(obj)$: function returning the number of objects above the argument.
+          \item $highestPossible(source, destination)$: returns the highest object 
+          above $destination$ such as it could contain/hold $source$.
+         \end{itemize}
+
+         Using this functions we can now explain the heuristics:
+
+        \begin{itemize}
+          \item {\bf Object On top/Inside Destination}: 
+            $2 * (ontop(object) + ontop(destination)$
+          \item {\bf Object Above Destination}:
+            $2 * (ontop(object) + (ontop(destination) - highestPossible(object, destination)$
+          \item {\bf Object LeftOf Destination}: calculate how costly is to put $object$ 
+          and $destination$ in each column. Pick the combination which fulfills the 
+          condition with the minor cost.
+          \item {\bf Object Beside Destination}: same case as above, but now the columns 
+          have to be adjacent.
+          \item {\bf Object RightOf Destination}: call the left case reversing the 
+          arguments.
+          \item {\bf Under}: call Above reversing the arguments.
+        \end{itemize}
+
+        Recall that these are not the exact functions, since we also have to deal with 
+        special cases that are not detailed here in order to keep the explanation simple 
+        but that can be checked in the source code. Note too, that the $2 *$ operation is
+        required since to move an object from one location to another it is necessary to 
+        pick it and drop it (so two operations).
+
 	\subsection{Partial order planning}
 
 	% ==========================================================================
 	\section{Conclusions}
+\newpage
+\appendix
+\section{Individual report: Santiago Munín González}
+The project was built during our group meetings, so I can't say I did something on my own althought I 
+was the main contributor of some pieces of the project.
+
+\subsection{Basic project}
+
+Here, I focused mostly on the interpretation and did small contributions on the planning (like bug fixing and 
+helping with some functions). During this phase I done some functions to check if a relationship is valid, 
+objects/locations matching and filtering, etc.
+
+\subsection{Extension: Quantifiers}
+
+This was the part I was most involved in. I struggled a little 
+bit until I found a simple and elegant way of accomplishing the task. They're working really well (talking about both functionality and performance).
+
+\subsection{Extension: Planning for bigger or more complex worlds}
+
+I've been involved in the design and implementation of the heuristics used by the planner as well as in some 
+bugfixing and testing.
+
+\subsection{Extension: Suggestions}
+
+We developed this between Carlos, Robert and me during one of our meetings.
+
+\subsection{Extension: Disambiguity}
+
+I modified the interpreter so it reports the list of object ids which cause a conflict (this is, 
+when we look for an object description using the quantifier "The" and more than one is found).
+
+\subsection{Changes to the interface}
+
+I was responsible for adding any Javascript/HTML in order to add any functionality (such as search strategy selection, suggestions, or disambiguity). 
+
 
 \end{document}
