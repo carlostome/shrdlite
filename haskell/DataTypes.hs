@@ -24,8 +24,8 @@ data WorldState = WState { _holding     :: Maybe Id,
                            _objectsInfo :: M.Map Id Object } deriving Show
 
 instance Hashable WorldState where
-  hashWithSalt s (WState holding _ world _) = s `hashWithSalt` holding
-                                              `hashWithSalt` world
+  hashWithSalt s (WState holding positions world _) = 
+    s `hashWithSalt` holding `hashWithSalt` world `hashWithSalt` positions
 
 -- | Get the coordinates of all objects in the world
 getPositions :: World -> M.Map Id (Int,Int)

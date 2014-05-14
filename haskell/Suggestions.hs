@@ -12,7 +12,7 @@ import Interpreter
 suggest :: WorldState -> [String]
 suggest worldState =
    map (intercalate " " . goalToUtterance worldState . snd) $
-       take 5 $ sortBy (\(h1,_) (h2,_) -> compare h2 h1)
+       take 10 $ sortBy (\(h1,_) (h2,_) -> compare h2 h1)
               [(heuristicAStar worldState goal,goal)
                  | goal <- generateAllSugestions worldState]
        

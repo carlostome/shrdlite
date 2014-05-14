@@ -10,3 +10,4 @@
 *.log
 *.pdf
 __pycache__
+haskell/Shrdlite
