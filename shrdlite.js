@@ -21,7 +21,7 @@ if (!Array.prototype.map)
 var AjaxScript = "cgi-bin/ajaxwrapper.py";
 
 // List of the JSON files that contain example worlds:
-var ExampleNames = ["medium","small","basic1","basic2","complex","impossible"];
+var ExampleNames = ["medium","small","basic1","basic2","basic3","complex","impossible"];
 var ExamplesFolder = "examples";
 
 // What the system says when it has nothing to do:
@@ -485,7 +485,7 @@ function userInput(input) {
             result.disambiguity.map(function(option) {return "\t· " + option});
           options = options.join("\n");
           alert("There is an ambiguity error, "
-            + "please rewrite the sentence using "
+            + "please rewrite the sentence "
             + "giving more information. Suggestions:\n\n" + options);
         }
         if (result.suggestions) {

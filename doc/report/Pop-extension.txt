@@ -1,0 +1,46 @@
+We started to implement a partial order planner as an advanced planning
+algorithm but got stuck at a half-finished state. 
+
+The basic building blocks of this algorithm are move actions with their 
+preconditions and effects. A partial order of the actions and causal links 
+between effects and preconditions.
+
+A move action specifies a move of an object from one position to another position
+by sayíng what has to be true before it can execute and what is true after. 
+The proconditions and effects are represented as conjuncts of simple predicates such as 
+(ball ontoop box), (box1 < box2) etc.
+They are variable (those above were insansiated) and can thus mold in to any wanted move 
+action that fit the constraints.
+
+The algorithm works by firstly setting up a start state (as an action that precedes
+every other action, has no preconditions and has the start state as it's effects)
+and a goal state (as an action thet procedes(?) every other action with the
+goal as an precondition and nothing as it's effects)
+The goal state is then put on the agenda (a queue of precondition conjuncts we want 
+to satisfy)
+
+We call the algorithm with this so called null plan
+A high-level rough description of the algorithm follows
+1)
+  Choose a goal on the agenda, if it's empty: we're successfull.
+2)
+  Try to instanciate or choose an already existing action that has 
+  the goal conjunct in it's effects. If we can't, this path was fruitless. Backtrack!
+  Order the chosen action before the goal action
+  Draw a causal link between the effect satisfying the goal and the goal
+  If we instansiated a new action, put all it's precondition conjuncts on the agenda.  
+3)
+  We now check if any causal link is potentially interfering with any action.
+  If we find that an action who's effects negate a causal link is not surely ordered
+  before or after that causal link then we must either move the action before or after the 
+  causal link. If neither is consistent with our ordering, backtrack.
+4)
+  Recursively invoke algorithm
+  
+If the algorithm returns successfully then we have a consistent ordering of move actions
+leading from start to goal state.
+
+This above is the proposed algorithm which we intended to implement.
+At this moment the algorithm cannot yet fully handle variable actions, physical constraints,
+disjunctive preconditions and only the relation ontop is supported (which is were we got stuck.) 
+

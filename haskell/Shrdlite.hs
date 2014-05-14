@@ -5,7 +5,7 @@
 -- Test from the command line:
 -- runhaskell Shrdlite.hs < ../examples/medium.json
 
-module Shrdlite where
+module Main where
 
 import           CombinatorParser
 import           Control.Monad    (foldM, liftM)
@@ -74,7 +74,10 @@ jsonMain jsinput = makeObj result
                    ("disambiguity", if null disambiguity 
                                        then JSNull  
                                        else showJSON disambiguity ),
-                  ("states", showJSON $ stats) ]
+                  ("states", if length goals == 1 then 
+                                showJSON $ stats
+                             else
+                                JSNull) ]
 
 duplicate :: [String] -> [String]
 duplicate [] = []

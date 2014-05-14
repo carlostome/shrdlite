@@ -86,9 +86,9 @@ transition worldState action =
 
 heuristicAStar :: WorldState -> Goal -> Int
 heuristicAStar worldState (And goals) =
-  maximum $ 2 : map (heuristicAStar worldState) goals
+  maximum $  map (heuristicAStar worldState) goals
 heuristicAStar worldState (Or goals) =
-  minimum $ 2 : map (heuristicAStar worldState) goals
+  minimum $  map (heuristicAStar worldState) goals
 heuristicAStar worldState (TakeObj id1) = 
   2 * (length (_world worldState !! x) - y)
   where

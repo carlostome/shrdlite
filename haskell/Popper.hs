@@ -5,6 +5,10 @@ import DataTypes
 import qualified Data.Sequence as Seq
 import qualified Data.List as List
 import qualified Data.Foldable as Whatev
+
+-- Lists instead of sets makes for som extra guards
+
+
 -- PopState = (Actions, Ordering of actions, Causal links between actions)
 -- data PopState = ([Action],[LessThan],[Clink])
 --                  deriving (Eq, Ord, Show)
@@ -23,13 +27,14 @@ data Clink = Clink Action Conjunct Action
 -- Single 'Feature atom' from precondition or effect conjunction
 -- Disjunction? tricky queries?
 -- Clear Id <=> explicitly saying there is no object ontop of Id
-data Conjunct = Rel Id Relation Id | Clear Id | Neg Conjunct
+data Conjunct = Rel Id Relation Id | Clear Id | Not Conjunct
                 deriving (Eq, Ord, Show)
 -- Is new or old. Has a name, preconditions and effects
 data Action = Action Id [Conjunct] [Conjunct]
               deriving (Eq, Ord)
+
 instance Show Action where
-    show (Action id _ _) = id
+  show (Action id _ _) = id
     
 -- pop starter - and 'stopper'?
 -- Translates world from stacks to features
@@ -54,7 +59,7 @@ pop (actions, order, clinks) agenda actionpool
     
           order3 <- newWorldAdditions actions2 order2 clinks2
    ]
-  where goal = head (Whatev.toList (Seq.take 1 agenda)) -- lol.. yes
+  where goal = let (head Seq.:< rest) = Seq.viewl agenda in head
 
   
 updateActions :: Action -> [Action] -> [Action]
@@ -73,13 +78,17 @@ updateAgenda (Action id pre eff) goal agenda actions
       Seq.>< (Seq.fromList (zip pre (replicate (length pre) (Action id pre eff))))
 
       
--- Makes two identical lessthan sometimes -- end and a2 equal
+
 updateOrder :: Action -> (Conjunct,Action) -> [Action] -> [LessThan] -> [LessThan]
 updateOrder a1 (q,a2) actions order 
+  | elem (LessThan a1 a2) order = 
+    order
   | elem a1 actions = 
     (LessThan a1 a2):order
+  | a2 == finish = 
+    (LessThan a1 finish):(LessThan start a1):order
   | otherwise = 
-    (LessThan a1 finish):(LessThan start a1):(LessThan a1 a2):order    
+    (LessThan a1 finish):(LessThan start a1):(LessThan a1 a2):order  
   where start  = last actions
         finish = actions !! (length actions - 2)
         
@@ -91,9 +100,9 @@ updateClinks a1 (q,a2) clinks = (Clink a1 q a2):clinks
 possibleActions :: (Conjunct,Action) -> [LessThan] -> [Action] -> [Action] -> [Action]
 possibleActions goal order actions actionpool = 
   actions2 ++ actionpool2 
-    where actions3 = filter ((snd goal) /= ) actions2
-          actions2 = filter (orderCons goal order) (filter (goalInEff goal) actions)
+    where actions2 = filter (orderCons goal order) (filter (goalInEff goal) actions)
           actionpool2 = filter (goalInEff goal) actionpool
+          --actions3 = filter ((snd goal) /= ) actions2
   
 goalInEff :: (Conjunct,Action) -> Action -> Bool
 goalInEff goal (Action _ _ effs) = elem (fst goal) effs
@@ -161,17 +170,23 @@ buildCrap :: Int -> (Action,Clink) -> LessThan
 buildCrap (-1) (at,Clink a1 _ a2) = LessThan at a1 
 buildCrap  1   (at,Clink a1 _ a2) = LessThan a2 at
 
--- Haskell abuse!! 
+-- Three boxes visual. Is action a threat to clink?
 isThreat :: [LessThan] -> (Action,Clink) -> Bool
-isThreat order (Action id pre eff,Clink a1 q a2) = 
+isThreat order (Action id pre eff,Clink a1 q a2) =
+  (elem (Not q) eff) 
+  &&
   (not ((elem (Action id pre eff) (transClos order a2)) || 
        (elem a1 (transClos order (Action id pre eff)))))
-   && (elem (Neg q) eff)
+  && 
+  (not ((Action id pre eff) == a1))
+  && 
+  (not ((Action id pre eff) == a2))
   
 -- Backlog
 
 -- Implement working v1
--- edit stack q
+
+-- All effects implied in init state?? how handle?
 
 -- Implement working v2
 
@@ -182,3 +197,4 @@ isThreat order (Action id pre eff,Clink a1 q a2) =
 -- Preserve the entities relation to its 'location objects'?
 
 -- Better datastructures
+
