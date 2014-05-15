@@ -188,7 +188,6 @@ plan strategy initialWorld goal = go initialStats initialQueue S.empty
         heuristic        = case strategy of
                              AStar     -> heuristicAStar
                              BFS       -> const2 0
-                             LowerCost -> const2 0
         initialStats     = 0
         go stat queue visited =
           case PQ.viewMin queue of

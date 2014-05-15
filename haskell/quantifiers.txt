@@ -1,0 +1,35 @@
+The: Exactly one
+  The: Exactly one -- 1 goal (why not OR?)
+  Any: Anyone      -- Or of ors
+  All: Everyone    -- Or of And
+
+Any: Anyone        
+  The: Exactly one -- Or     (why not or of ors?)
+  Any: Anyone      -- Or of ors    
+  All: Everyone    -- Or of ands
+
+All: Everyone
+  The: Exactly one -- And    (why not and of ors?)
+  Any: Anyone      -- And of ors
+  All: Everyone    -- And of ands 
+
+Algorithm:
+
+1. Find entities of the first quantifier         CHECK IF != 1 (while THE)
+2. Find entities of the second quantifier          "" 
+3. Merge them using the rules above
+
+The/Any
+  The/Any  -- Or of ors
+  All      -- Or of ands
+
+All
+  The/Any  -- And of ors
+  All      -- And of ands
+
+
+DETECTING IMPOSSIBLES
+- Impossible relationships
+- Not enough locations (i.e: put all balls in a box <- less boxes than balls).
+- Any/The in all (let it fail in case?)
+- All in all? Impossible unless 1 and 1 (let it fail?)

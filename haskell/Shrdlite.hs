@@ -102,8 +102,6 @@ parseStrategy (JSString str) =
   case fromJSString str of
        "0" -> return AStar
        "1" -> return BFS
-       "2" -> return LowerCost
-       "3" -> return PartialOrderPlanner
        other   -> error other
 
 -- | Parse JSON Object to real Object representation.

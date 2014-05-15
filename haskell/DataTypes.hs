@@ -16,7 +16,7 @@ type World = [[Id]]
 type Objects = M.Map Id Object
 type Plan = [String]
 
-data Strategy = AStar | BFS | LowerCost | PartialOrderPlanner
+data Strategy = AStar | BFS 
 
 data WorldState = WState { _holding     :: Maybe Id,
                            _positions   :: M.Map Id (Int, Int),
