@@ -36,14 +36,14 @@ jsonMain jsinput = makeObj result
       trees     = parse command utterance :: [Command]
 
       (nonFilteredGoals, ambs) = let (g, a) = unzip $ map findG trees in (concat g, concat a)
-      goals = filter validGoal (concatMap (clearGoal) nonFilteredGoals)
+      goals = filter validGoal $ map clearGoal nonFilteredGoals
 
       validGoal (Or [])    = False
       validGoal (And [])   = False
       validGoal _          = True
-      clearGoal (And list) = filter validGoal list
-      clearGoal (Or list)  = filter validGoal list
-      clearGoal other      = [other]
+      clearGoal (And list) = And $ filter validGoal list
+      clearGoal (Or list)  = Or $ filter validGoal list
+      clearGoal other      = other
 
       findG tree = 
         case interpret currentWorld tree of
