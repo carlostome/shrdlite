@@ -25,7 +25,7 @@ data WorldState = WState { _holding     :: Maybe Id,
 
 instance Hashable WorldState where
   hashWithSalt s (WState holding positions world _) = 
-    s `hashWithSalt` holding `hashWithSalt` world `hashWithSalt` positions
+    s `hashWithSalt` holding `hashWithSalt` world 
 
 -- | Get the coordinates of all objects in the world
 getPositions :: World -> M.Map Id (Int,Int)
@@ -92,8 +92,22 @@ relationValid info id1 id2 Inside
     (Object size2 _ form2) =
       maybe (error $ "getObject" ++ show id2) id (M.lookup id2 info)
     
-relationValid _ "Floor" _ Under   = True
-relationValid _ _ "Floor" Under   = False
+relationValid info id1 id2 Above 
+  | id2 /= "Floor" && form2 == Ball = False
+  | otherwise     = True
+  where
+    (Object size2 _ form2) =
+      maybe (error $ "getObject" ++ show id2) id (M.lookup id2 info)
+
+relationValid info id1 id2 Under 
+  | id1 == "Floor" = True
+  | id2 == "Floor" = False
+  | form1 == Ball  = False
+  | otherwise     = True
+  where
+    (Object size1 _ form1) =
+      maybe (error $ "getObject" ++ show id1) id (M.lookup id1 info)
+
 relationValid _ _ "Floor" Leftof  = False
 relationValid _ _ "Floor" Rightof = False
 relationValid _ _ "Floor" Beside  = False
