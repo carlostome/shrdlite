@@ -9,7 +9,7 @@ module Main where
 
 import           CombinatorParser
 import           Control.Monad    (foldM, liftM)
-import           Data.List        (findIndex, intersperse)
+import           Data.List        (findIndex, intersperse, nub)
 import qualified Data.Map         as M
 import           Data.Maybe       (fromJust, isJust, isNothing)
 import           ShrdliteGrammar
@@ -35,7 +35,15 @@ jsonMain jsinput = makeObj result
 
       trees     = parse command utterance :: [Command]
 
-      (goals, ambs) = let (g, a) = unzip $ map findG trees in (concat g, concat a)
+      (nonFilteredGoals, ambs) = let (g, a) = unzip $ map findG trees in (concat g, concat a)
+      goals = filter validGoal (concatMap (clearGoal) nonFilteredGoals)
+
+      validGoal (Or [])    = False
+      validGoal (And [])   = False
+      validGoal _          = True
+      clearGoal (And list) = filter validGoal list
+      clearGoal (Or list)  = filter validGoal list
+      clearGoal other      = [other]
 
       findG tree = 
         case interpret currentWorld tree of
@@ -52,7 +60,8 @@ jsonMain jsinput = makeObj result
                   
       output    = if null trees then "Parse error!"
                   else if null goals then "Interpretation error!"
-                       else if length goals >= 2 then "Ambiguity error!"
+                       else if (length goals >= 2 || (not $ null disambiguity))
+                            then "Ambiguous sentence, please provide more information."
                             else if isNothing solution then "Planning error!"
                                  else "Success!"
 
@@ -62,7 +71,7 @@ jsonMain jsinput = makeObj result
                    ("trees",     showJSON (map show trees)),
                    ("goals",     if length trees >= 1 then showJSON (map show goals)
                                  else JSNull),
-                   ("plan",      if length goals  == 1 && isJust solution then
+                   ("plan",      if (length goals == 1 && null disambiguity) && isJust solution then
                                    showJSON (duplicate finalPlan)
 				 else JSNull),
                    ("output",    showJSON output),
@@ -72,8 +81,8 @@ jsonMain jsinput = makeObj result
                                     else
                                       showJSON $ suggest currentWorld),
                    ("disambiguity", if null disambiguity 
-                                       then JSNull  
-                                       else showJSON disambiguity ),
+                                        then JSNull  
+                                        else showJSON disambiguity),
                   ("states", if length goals == 1 then 
                                 showJSON $ stats
                              else
