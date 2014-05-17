@@ -69,10 +69,7 @@ objAttrsToString (Object size color form) =
     colorList =
       if color == AnyColor then []
       else                      [show color]
-    formList = 
-      if form == AnyForm then ["object"]
-      else                    [show form]
-  in map (map toLower) $ concat [sizeList, colorList, formList]
+  in map (map toLower) $ concat [sizeList, colorList, [show form]]
 
 -- | For a given object returns an object with the fewest number of attributes
 -- for identifying it uniquely in the world
@@ -86,8 +83,7 @@ fewestAttributesToIdentifyObject worldState obj@(Object size color form) id =
         uniqueEntities = filter (isLeft . (\ent -> findEntities ent worldState)) allCombEnts
     in
       if null uniqueEntities then
-        let allObjs = map snd $ M.toList $ _objectsInfo worldState
-            allIds = concat $ _world worldState
+        let allIds = concat $ _world worldState
             allRels = [Beside, Leftof, Rightof, Above, Ontop, Under, Inside]
             validRelPairs = [(localId, rel) | localId <- allIds, rel <- allRels
                             , relationHolds worldState id rel localId]
