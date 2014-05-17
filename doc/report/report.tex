@@ -308,21 +308,21 @@ in
         but we think that, overall, they were totally worth it.
 
 \begin{table*}[t]
-    \begin{tabular}{|l|l|l|l|}
+    \begin{tabular}{|l|l|l|l|l|}
     \hline
-    World   & Utterance                                               & A* (States travelled) & BFS (States travelled) \\ \hline
-    Small   & put the white ball in a box on the floor                & 13                    & 141                    \\ \hline
-    Small   & move all balls inside a large box                       & 130                   & 145                    \\ \hline
-    Small   & put all boxes on the floor                              & 62                    & 75                     \\ \hline
-    Medium  & move the large ball inside a yellow box on the floor    & 17                    & 11633                  \\ \hline
-    Medium  & move all bricks on a table                              & 46263                 & 193239                 \\ \hline
-    Medium  & move all balls inside a large box                       & 91235                 & 191687                 \\ \hline
-    Medium  & put the brick that is to the left of a pyramid in a box & 9                     & 257                    \\ \hline
-    Complex & put all balls in a large box                            & 498                   & 1035                   \\ \hline
-    Complex & put all boxes on the floor                              & 393788                & 969239                 \\ \hline
-    Complex & put all red objects on the floor                        & 274328                & 599034                 \\ \hline
+    World   & Utterance                                               & A*     & BFS     & Improvement\\ \hline
+    Small   & put the white ball in a box on the floor                & 13     & 141     & 984.61\%   \\ \hline
+    Small   & move all balls inside a large box                       & 130    & 145     & 11.53\%    \\ \hline
+    Small   & put all boxes on the floor                              & 62     & 75      & 20.96\%    \\ \hline
+    Medium  & move the large ball inside a yellow box on the floor    & 17     & 11633   & 68329.41\% \\ \hline
+    Medium  & move all bricks on a table                              & 46263  & 193239  & 317.70\%   \\ \hline
+    Medium  & move all balls inside a large box                       & 91235  & 191687  & 110.10\%   \\ \hline
+    Medium  & put the brick that is to the left of a pyramid in a box & 9      & 257     & 2755.55\%  \\ \hline
+    Complex & put all balls in a large box                            & 498    & 1035    & 107.83\%   \\ \hline
+    Complex & put all boxes on the floor                              & 393788 & 969239  & 146.13\%   \\ \hline
+    Complex & put all red objects on the floor                        & 274328 & 599034  & 118.36\%   \\ \hline
     \end{tabular}
-    \caption{Efficiency of the heuristics (using A*) versus BFS}
+    \caption{Efficiency of the heuristics (using A*) versus BFS (comparing the number of states travelled)}
     \label{table}
 \end{table*}
         \subsection{Suggestions}
