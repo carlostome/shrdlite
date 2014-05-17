@@ -55,13 +55,35 @@
 	the objets in order to fulfill the user input.
 
 	% ==========================================================================
-	\section{Basic project}
+	\section{Project}
 
 	The purpose of the basic project is to implement a backend for the robot 
 	arm. It receives the input, which is processed by the engine and 
-	generates a list of actions that the robot must perform in order to acheive 
-	the desired outcome.
+	generates a list of actions that the robot must perform in order to achieve 
+	the desired outcome. \\
 	
+        Along with this, we have implemented a number of extensions that 
+        allows us to treat more interesting examples.  \\
+
+        This extensions are: \\
+
+        \begin{itemize}
+          \item Complete quantifier handling.  \\
+
+          \item Object disambiguation. \\ 
+
+          \item Dynamic suggestions.  \\
+
+          \item Complex world handling.  \\
+
+        \end{itemize}
+
+        Moreover we tryied to implement a Partial-Order planner but time was not 
+        enough for this purpouse.  Anyway we have a draft version of the 
+        implementation and a complete description on how we could have finish 
+        it.  \\
+
+        \end{itemize}
 	\subsection{Design}
 
 	The top-level design is split into two main phases: interpretation and 
@@ -75,28 +97,78 @@
 	Once the goals are generated, they are passed to the actual planner, which 
 	outputs a list of basic actions.
 
-	\subsection{Implementation}
+	\subsubsection{World and Goal representation.  }
+        
+        For simple cases a goal is represented either as a relation that must 
+        hold between two objects, or as the fact that the arm must hold 
+        a object.  \\
 
+\begin{verbatim}
+Goal = MoveObj Id Relation Id
+     | TakeObj Id 
+\end{verbatim}
+
+        This simple representation is enough to handle all cases where ``the'' and
+        ``any'' quantifier are involved.  \\
+
+        When we need to handle all quantifier we have to add the notion of 
+        composed goal (this is, \textit{put all balls
+        in a box} should generate a goal composed by all the boxes in some box). For 
+        this purpose, we extend the goal datatype with two more clauses.  \\
+
+\begin{verbatim}
+Goal = And [Goal]
+     | Or [Goal]
+     | MoveObj Id Relation Id
+     | TakeObj Id 
+\end{verbatim}
+        
+\begin{verbatim} 
+WorldState = 
+  { _holding     :: Maybe Id
+  , _positions   :: M.Map Id (Int, Int)
+  , _world       :: [[Id]]
+  , _objectsInfo :: M.Map Id Object } 
+\end{verbatim}
+        Goals are represented as: 
+\begin{verbatim}
+Goal = 
+     | Move Id Relation Id
+     | Take Id 
+\end{verbatim}
+        So a goal is either taking an object from the world,  
+
+
+	\subsection{Introduction}
+	\subsection{Introduction}
+        
+        
 
 	% ==========================================================================
 	\section{Extensions}
 
 	\subsection{Handling of quantifiers}
 
-          The basic project just requires to handle the all quantifier. That means it is enough to
-          detect the list of objects matching the description (and the list of objects matching the destination if the goal is \texttt{Move}, merging them later).
+          The basic project just requires to handle the all quantifier.
+          That means it is enough to detect the list of objects matching the description
+          (and the list of objects matching the destination if the goal is \texttt{Move},
+          merging them later).
 
           For this extension, we have to correctly process all the quantifiers:
 
           \begin{itemize}
-            \item {\bf The}: this can lead to an ambiguity ("the ball" implies there has to be only one ball, otherwise it is an ambiguity error).
-            \item {\bf Any}: this is how we processed all before (this is, just pick one among all the matches).
-            \item {\bf All}: we changed this, so now it actually matches everything (we will explain this during in the following section).
+            \item {\bf The}: this can lead to an ambiguity ("the ball" implies there has
+            to be only one ball, otherwise it is an ambiguity error).
+            \item {\bf Any}: this is how we processed all before (this is, just pick one
+            among all the matches).
+            \item {\bf All}: we changed this, so now it actually matches everything 
+            (we will explain this during in the following section).
           \end{itemize}
 
           \subsubsection{Composed goals}
-          Now we need to handle with composed goals (this is, \textit{put all balls in a box} should
-          generate a goal composed by all the boxes in some box). For this purpose, we redefine the goal datatype:
+          Now we need to handle with composed goals (this is, \textit{put all balls
+          in a box} should generate a goal composed by all the boxes in some box). For 
+          this purpose, we redefine the goal datatype:
 
 \begin{verbatim}
 data Goal = And [Goal]
@@ -105,19 +177,24 @@ data Goal = And [Goal]
      | TakeObj Id deriving (Eq, Show)
 \end{verbatim}
 
-          We don't think there is much room for explanation here, a goal is either taking an object or moving it, or a set of those. There are two kinds of sets, the \texttt{and} (conjuction) and the \texttt{or} (disjunction).
+          We don't think there is much room for explanation here, a goal is either 
+          taking an object or moving it, or a set of those. There are two kinds of 
+          sets, the \texttt{and} (conjuction) and the \texttt{or} (disjunction).
 
           Let's go back again to the list of quantifiers and relate them to the goals.
 
           \begin{itemize}
-            \item {\bf The}: this generates a single goal (represented as a disjunctive list of one element). Useful to generate all the goals in an easy way (explained on the next code snippet).
+            \item {\bf The}: this generates a single goal (represented as a disjunctive
+            list of one element). Useful to generate all the goals in an easy way
+            (explained on the next code snippet).
             \item {\bf Any}: this generates a disjunctive goal.
             \item {\bf All}: this generates a conjunctive goal.
           \end{itemize}
 
-          However, this is not that simple, what happens when we have something like \textit{put the blue ball in a box}. This should generate a disjunctive goal composed of all the possible
-          goals involving the blue ball in a box. Let's say we have, in our world, a blue ball \textit{b}
-          and two boxes \textit{b1} and \textit{b2}. The goal would be something like:
+          However, this is not that simple, what happens when we have something like 
+          \textit{put the blue ball in a box}. This should generate a disjunctive goal
+          composed of all the possible goals involving the blue ball in a box. Let's say
+          we have, in our world, a blue ball \textit{b} and two boxes \textit{b1} and \textit{b2}. The goal would be something like:
 
 \begin{verbatim}
   Or [MoveObj b Ontop b1
@@ -155,15 +232,16 @@ in
         \subsection{Handling bigger worlds}
         The breadth-first search strategy worked well at first: we were getting solutions 
         fairly quick in most cases. However, after making sure we could handle the small 
-        world, we moved to the medium and complex examples and here we got a lot of timeouts 
-        (even though we raised from 5 to 50 seconds the time frame).
+        world, we moved to the medium and complex examples and here we got a lot of 
+        timeouts (even though we raised from 5 to 50 seconds the time frame).
 
         The problem was we had to explore too many states in order to find a solution. The 
-        number of possible states in these worlds is huge so we needed a way of prioritizing 
-        some states. The first that came up to our minds were some heuristics functions, thus 
-        we started thinking about the different cases and created some functions to use with 
-        the A* algorithm. We struggled a little bit at the beginning since due to some mistakes
-        some of our heuristic functions were overstimating (so they weren't admissibles).
+        number of possible states in these worlds is huge so we needed a way of
+        prioritizing some states. The first that came up to our minds were some
+        heuristics functions, thus we started thinking about the different cases
+        and created some functions to use with the A* algorithm. We struggled a little
+        bit at the beginning since due to some mistakes some of our heuristic functions
+        were overstimating (so they weren't admissibles).
         
         \subsubsection{Proposed heuristics}
         In this section we describe briefly the implemented heuristics (check the code for
