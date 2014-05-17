@@ -35,7 +35,7 @@
 
 		This document describes the design and implementation of Shrdlite. This 
 		is a smaller version of the Shrdlu game, which is used in the 
-		laboration of Artificial Intelligence TIN 172.
+		laboration of the Artificial Intelligence (TIN172) course at Chalmers.
 
 	\end{abstract}
 
@@ -57,7 +57,7 @@
 	% ==========================================================================
 	\section{Project}
 
-	The purpose of the basic project is to implement a backend for the robot 
+	The purpose of the project is to implement a backend for the robot 
 	arm. It receives the input, which is processed by the engine and 
 	generates a list of actions that the robot must perform in order to achieve 
 	the desired outcome. \\
@@ -78,12 +78,11 @@
 
         \end{itemize}
 
-        Moreover we tryied to implement a Partial-Order planner but time was not 
-        enough for this purpouse.  Anyway we have a draft version of the 
+        Moreover we tried to implement a Partial-Order planner but we didn't have 
+        time enough to finish it.  Anyway we have a draft version of the 
         implementation and a complete description on how we could have finish 
         it.  \\
 
-        \end{itemize}
 	\subsection{Design}
 
 	The top-level design is split into two main phases: interpretation and 
@@ -97,7 +96,7 @@
 	Once the goals are generated, they are passed to the actual planner, which 
 	outputs a list of basic actions.
 
-	\subsubsection{World and Goal representation.  }
+	\subsubsection{World and Goal representation.}
         
         For simple cases a goal is represented either as a relation that must 
         hold between two objects, or as the fact that the arm must hold 
@@ -108,10 +107,10 @@ Goal = MoveObj Id Relation Id
      | TakeObj Id 
 \end{verbatim}
 
-        This simple representation is enough to handle all cases where ``the'' and
-        ``any'' quantifier are involved.  \\
+        This simple representation is enough to handle all cases where the ``the'' and
+        ``any'' quantifiers are involved.  \\
 
-        When we need to handle all quantifier we have to add the notion of 
+        But we wanted to handle ``all'' quantifiers so we had to add the notion of 
         composed goal (this is, \textit{put all balls
         in a box} should generate a goal composed by all the boxes in some box). For 
         this purpose, we extend the goal datatype with two more clauses.  \\
@@ -122,7 +121,8 @@ Goal = And [Goal]
      | MoveObj Id Relation Id
      | TakeObj Id 
 \end{verbatim}
-        
+
+As for the world representation, we defined the following record:
 \begin{verbatim} 
 WorldState = 
   { _holding     :: Maybe Id
@@ -130,19 +130,28 @@ WorldState =
   , _world       :: [[Id]]
   , _objectsInfo :: M.Map Id Object } 
 \end{verbatim}
-        Goals are represented as: 
-\begin{verbatim}
-Goal = 
-     | Move Id Relation Id
-     | Take Id 
-\end{verbatim}
-        So a goal is either taking an object from the world,  
+
+A state in the state space is the combination of \texttt{\_holding} (if any object is holded by the arm and which), \texttt{\_positions} (position of every object) and \texttt{\_world} (a list of stacks representing just the ids of the objects of the world). Note that \texttt{\_objectsInfo} does not belongs to a state in the search space 
+remains the same through the whole program).
+  
+  \section{Interpretation}
+  This is the phase executed after the parsing and before the planning. Its responsibility is to translate a 
+  parse tree into a goal (or a set of goals) and solve possible ambiguity problems. Details about these two steps 
+  can be found in some of the next extension sections.
+
+  In a nutshell, it tries to find all the objects refered by the utterance sent to the system and return a list of
+  goals that are actually possible. If more than one goal is found, then it tries to solve the ambiguity by 
+  suggesting to the user more concrete sentences.
 
 
-	\subsection{Introduction}
-	\subsection{Introduction}
-        
-        
+  \section{Planning}
+  This phase tries to satisfy a given goal. It can use two different search methods (breadth-first search and A*). At every state, it find all possible next states (discarding those who were already checked) and keeps going 
+  until it satisfies the goal. Note than if A* is used, the heuristics described in following sections help to 
+  follow a potentially good path instead of just checking every possibility.
+
+  In order to generate all the possible next states, we use a function\footnote{Quite easy to implement 
+  since the only movement we have to take care of is dropping an object on top of another} 
+  which finds out if a movement if possible and, in that case, the resulting world of doing so is added.
 
 	% ==========================================================================
 	\section{Extensions}
@@ -221,13 +230,21 @@ in
           The approach here was to modify the \texttt{findEntities} function so it can return
            either a list of matches or a list of conflicts. As an example, if we have two 
            balls and receive the utterance "take the ball", then we have a conflict because 
-           we are requiring an specific object (using the quantifier \texttt{the}) and there            exist two objects matching the description.
+           we are requiring an specific object (using the quantifier \texttt{the}) and there
+           exist two objects matching the description.
 
-          If the interpret don't find any ambiguity then the goal is sent two the planner 
+          If the interpreter doesn't find any ambiguity then the goal is sent to the planner 
           and everything goes on as before. However, if any ambiguity is found, then the 
           list of ids is sent to another function which tries to remove the disambiguity 
           (this is, giving unique descriptions to every id). After finding unique 
           descriptions, they are sent as a response and showed in a pop up to the user.
+
+          Due to time issues we are not solving all the ambiguity conflicts. It works really well
+          with ambiguity interpreting one parse tree, but it doesn't handle ambiguities coming from 
+          the interpretation of different parse trees.
+
+          \subsubsection{Unique identification of objects}
+          TODO
 
         \subsection{Handling bigger worlds}
         The breadth-first search strategy worked well at first: we were getting solutions 
@@ -282,10 +299,48 @@ in
         required since to move an object from one location to another it is necessary to 
         pick it and drop it (so two operations).
 
+        \subsubsection{Efficiency of the heuristics}
+        In order to check how useful were the heuristics we did some tests using the example worlds 
+        and we found some interesting speed up in some cases (table~\ref{table}). Note, however, that the 
+        calculation of the heuristics adds an important overhead so some of them may not be that good.
+
+        On the other hand we found some examples for which the heuristics weren't useful at all, 
+        but we think that, overall, they were totally worth it.
+
+\begin{table*}[t]
+    \begin{tabular}{|l|l|l|l|}
+    \hline
+    World   & Utterance                                               & A* (States travelled) & BFS (States travelled) \\ \hline
+    Small   & put the white ball in a box on the floor                & 13                    & 141                    \\ \hline
+    Small   & move all balls inside a large box                       & 130                   & 145                    \\ \hline
+    Small   & put all boxes on the floor                              & 62                    & 75                     \\ \hline
+    Medium  & move the large ball inside a yellow box on the floor    & 17                    & 11633                  \\ \hline
+    Medium  & move all bricks on a table                              & 46263                 & 193239                 \\ \hline
+    Medium  & move all balls inside a large box                       & 91235                 & 191687                 \\ \hline
+    Medium  & put the brick that is to the left of a pyramid in a box & 9                     & 257                    \\ \hline
+    Complex & put all balls in a large box                            & 498                   & 1035                   \\ \hline
+    Complex & put all boxes on the floor                              & 393788                & 969239                 \\ \hline
+    Complex & put all red objects on the floor                        & 274328                & 599034                 \\ \hline
+    \end{tabular}
+    \caption{Efficiency of the heuristics (using A*) versus BFS}
+    \label{table}
+\end{table*}
+        \subsection{Suggestions}
+
+        We came up with the idea of suggesting the user some interesting sentences. This is, we want 
+        to prove to the user our system can handle difficult tasks. In order to do this, we first needed 
+        to find a way to measure how hard a goal was without actually solving it (otherwise it would be 
+        prohitibely slow). We realised that the already implemented heuristics were a good tool, so we decided 
+        to use them.
+
+        The idea is the following: we generate a bunch of possible goals (not extremely complicated, composed 
+        of a simple movement) and we calculate the heuristics for them. After that, we just select the ones with 
+        the highest heuristics (so they're likely to be harder).
 	\subsection{Partial order planning}
 
 	% ==========================================================================
 	\section{Conclusions}
+
 \newpage
 \appendix
 \section{Individual report: Santiago Munín González}
