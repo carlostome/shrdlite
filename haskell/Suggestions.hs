@@ -39,13 +39,20 @@ relations = [Beside , Leftof , Rightof , Above , Ontop , Under , Inside]
 goalToUtterance ::  WorldState -> Goal -> Utterance
 goalToUtterance worldState goal =
   case goal of
-    TakeObj id1 -> ["take", "the"] ++ (getObjectDescription worldState id1)
+    TakeObj id1 ->
+      let objDesc = getObjectDescription worldState id1
+      in
+        if objDesc == [] then ["unsolvable"," abiguity"," error"]
+        else ["take", "the"] ++ objDesc
     MoveObj id1 rel id2 ->
-      (if isJust $ _holding worldState then ["put", "it"]
-      else
-        ["put", "the"] ++ getObjectDescription worldState id1)
-      ++ getRelationDescription rel 
-      ++ getObjectDescription worldState id2
+      let objDesc1 = getObjectDescription worldState id1
+          objDesc2 = getObjectDescription worldState id2
+      in
+        if objDesc1 == [] || objDesc2 == [] then ["unsolvable"," abiguity"," error"]
+        else
+          if isJust $ _holding worldState then ["put", "it"]
+          else
+            ["put", "the"] ++ objDesc1 ++ getRelationDescription rel ++ objDesc2
 
 getObjectDescription :: WorldState -> Id -> [String]
 getObjectDescription worldState id
@@ -55,6 +62,7 @@ getObjectDescription worldState id
        ent = fewestAttributesToIdentifyObject worldState obj id
    in
      case ent of
+       BasicEntity Any (Object AnySize AnyColor AnyForm) -> []
        BasicEntity _ obj -> objAttrsToString obj
        RelativeEntity q1 thisObj (Relative rel (BasicEntity q2 obj2)) ->
          objAttrsToString thisObj ++ ((map toLower $ show rel) : "the" : objAttrsToString obj2)
@@ -100,7 +108,8 @@ fewestAttributesToIdentifyObject worldState obj@(Object size color form) id =
                 ]
             validRels = filter (isLeft . \ent -> findEntities ent worldState) allRelEnts
         in
-            minimumBy orderRelEntByBothObjects validRels
+          if null validRels then BasicEntity Any (Object AnySize AnyColor AnyForm)
+          else minimumBy orderRelEntByBothObjects validRels
       else minimumBy orderEntsByDescrLength uniqueEntities
 
 orderRelEntByBothObjects :: Entity -> Entity -> Ordering
