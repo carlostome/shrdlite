@@ -42,17 +42,18 @@ goalToUtterance worldState goal =
     TakeObj id1 ->
       let objDesc = getObjectDescription worldState id1
       in
-        if objDesc == [] then ["unsolvable"," abiguity"," error"]
+        if objDesc == [] then []
         else ["take", "the"] ++ objDesc
     MoveObj id1 rel id2 ->
       let objDesc1 = getObjectDescription worldState id1
           objDesc2 = getObjectDescription worldState id2
       in
-        if objDesc1 == [] || objDesc2 == [] then ["unsolvable"," abiguity"," error"]
+        if objDesc1 == [] || objDesc2 == [] then []
         else
-          if isJust $ _holding worldState then ["put", "it"]
+          (if isJust $ _holding worldState then ["put", "it"]
           else
-            ["put", "the"] ++ objDesc1 ++ getRelationDescription rel ++ objDesc2
+            ["put", "the"] ++ objDesc1) 
+          ++ getRelationDescription rel ++ objDesc2
 
 getObjectDescription :: WorldState -> Id -> [String]
 getObjectDescription worldState id

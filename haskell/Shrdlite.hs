@@ -59,11 +59,14 @@ jsonMain jsinput = makeObj result
       (solution,stats) = plan algorithm currentWorld (head goals) :: (Maybe (Plan,WorldState), Int)
                   
       output    = if null trees then "Parse error!"
-                  else if null goals then "Interpretation error!"
-                       else if (length goals >= 2 || (not $ null disambiguity))
-                            then "Ambiguous sentence, please provide more information."
-                            else if isNothing solution then "Planning error!"
-                                 else "Success!"
+                  else 
+                    if null goals then "Interpretation error!"
+                    else 
+                      if (length goals >= 2 || (not $ null disambiguity))
+                      then "Ambiguous sentence, please provide more information."
+                      else
+                        if isNothing solution then "Planning error!"
+                        else "Success!"
 
       Just (finalPlan, finalWorld) =  solution
 
@@ -80,7 +83,7 @@ jsonMain jsinput = makeObj result
                                       showJSON $ suggest finalWorld
                                     else
                                       showJSON $ suggest currentWorld),
-                   ("disambiguity", if null disambiguity 
+                   ("disambiguity", if null (filter (not . null) disambiguity) 
                                         then JSNull  
                                         else showJSON disambiguity),
                   ("states", if length goals == 1 then 
