@@ -39,13 +39,21 @@ relations = [Beside , Leftof , Rightof , Above , Ontop , Under , Inside]
 goalToUtterance ::  WorldState -> Goal -> Utterance
 goalToUtterance worldState goal =
   case goal of
-    TakeObj id1 -> ["take", "the"] ++ (getObjectDescription worldState id1)
+    TakeObj id1 ->
+      let objDesc = getObjectDescription worldState id1
+      in
+        if objDesc == [] then []
+        else ["take", "the"] ++ objDesc
     MoveObj id1 rel id2 ->
-      (if isJust $ _holding worldState then ["put", "it"]
-      else
-        ["put", "the"] ++ getObjectDescription worldState id1)
-      ++ getRelationDescription rel 
-      ++ getObjectDescription worldState id2
+      let objDesc1 = getObjectDescription worldState id1
+          objDesc2 = getObjectDescription worldState id2
+      in
+        if objDesc1 == [] || objDesc2 == [] then []
+        else
+          (if isJust $ _holding worldState then ["put", "it"]
+          else
+            ["put", "the"] ++ objDesc1) 
+          ++ getRelationDescription rel ++ objDesc2
 
 getObjectDescription :: WorldState -> Id -> [String]
 getObjectDescription worldState id
@@ -55,6 +63,7 @@ getObjectDescription worldState id
        ent = fewestAttributesToIdentifyObject worldState obj id
    in
      case ent of
+       BasicEntity Any (Object AnySize AnyColor AnyForm) -> []
        BasicEntity _ obj -> objAttrsToString obj
        RelativeEntity q1 thisObj (Relative rel (BasicEntity q2 obj2)) ->
          objAttrsToString thisObj ++ ((map toLower $ show rel) : "the" : objAttrsToString obj2)
@@ -69,10 +78,7 @@ objAttrsToString (Object size color form) =
     colorList =
       if color == AnyColor then []
       else                      [show color]
-    formList = 
-      if form == AnyForm then ["object"]
-      else                    [show form]
-  in map (map toLower) $ concat [sizeList, colorList, formList]
+  in map (map toLower) $ concat [sizeList, colorList, [show form]]
 
 -- | For a given object returns an object with the fewest number of attributes
 -- for identifying it uniquely in the world
@@ -86,8 +92,7 @@ fewestAttributesToIdentifyObject worldState obj@(Object size color form) id =
         uniqueEntities = filter (isLeft . (\ent -> findEntities ent worldState)) allCombEnts
     in
       if null uniqueEntities then
-        let allObjs = map snd $ M.toList $ _objectsInfo worldState
-            allIds = concat $ _world worldState
+        let allIds = concat $ _world worldState
             allRels = [Beside, Leftof, Rightof, Above, Ontop, Under, Inside]
             validRelPairs = [(localId, rel) | localId <- allIds, rel <- allRels
                             , relationHolds worldState id rel localId]
@@ -104,7 +109,8 @@ fewestAttributesToIdentifyObject worldState obj@(Object size color form) id =
                 ]
             validRels = filter (isLeft . \ent -> findEntities ent worldState) allRelEnts
         in
-            minimumBy orderRelEntByBothObjects validRels
+          if null validRels then BasicEntity Any (Object AnySize AnyColor AnyForm)
+          else minimumBy orderRelEntByBothObjects validRels
       else minimumBy orderEntsByDescrLength uniqueEntities
 
 orderRelEntByBothObjects :: Entity -> Entity -> Ordering

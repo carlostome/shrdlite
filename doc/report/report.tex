@@ -19,6 +19,16 @@
 \special{papersize=210mm,297mm} % to avoid having to use "-t a4" with dvips 
 %\setlength\titlebox{6.5cm}  % You can expand the title box if you really have to
 
+%\usepackage{xcolor}
+\usepackage{listings}
+\lstset{language=haskell,
+        basicstyle=\footnotesize\ttfamily
+%        keywordstyle=\color[rgb]{0,0,1},
+%        commentstyle=\color[rgb]{0.133,0.545,0.133},
+%        stringstyle=\color[rgb]{0.627,0.126,0.941},
+%        identifierstyle=\color[rgb]{0.71,0.33,0.14}
+}
+
 \title{Report for Artificial Intelligence TIN 172}
 
 \author{Robert Hangu\\\And
@@ -48,11 +58,11 @@
 
 	The objects have different shapes, sizes and colors. The robot may only 
 	perform actions which obey physical laws, such as not putting a big object 
-	into a small box or not stacking anything onto of a ball.
+	into a small box or not stacking anything ontop of a ball.
 
-	Utterances can be given to the robot through a web interface, which tell it 
-	what objects to move where. The robot arm then finds a way of rearranging 
-	the objets in order to fulfill the user input.
+	Utterances can be given to the robot through a web interface, which tells it 
+	what objects to move. The robot arm then finds a way of rearranging 
+	the objects in order to fulfill the user's input.
 
 	% ==========================================================================
 	\section{Project}
@@ -68,20 +78,20 @@
         This extensions are: \\
 
         \begin{itemize}
-          \item Complete quantifier handling.  \\
+          \item Complete quantifier handling  \\
 
-          \item Object disambiguation. \\ 
+          \item Object disambiguation \\ 
 
-          \item Dynamic suggestions.  \\
+          \item Dynamic suggestions  \\
 
-          \item Complex world handling.  \\
+          \item Complex world handling  \\
 
         \end{itemize}
 
-        Moreover we tried to implement a Partial-Order planner but we didn't have 
-        time enough to finish it.  Anyway we have a draft version of the 
-        implementation and a complete description on how we could have finish 
-        it.  \\
+        Moreover, we tried to implement a Partial-Order planner, but we didn't have 
+        enough time to complete it. Though we provide a draft version of its
+        implementation and a complete description on how we could have finished
+        it.
 
 	\subsection{Design}
 
@@ -89,9 +99,9 @@
 	planning.
 
 	Interpretation deals with the parsed user input and delivers some goals 
-	according to the input, that are contextualized to the world. For e.g. for the 
-	input ``put the blue ball in the red box'', this should generate a goal 
-	which matches all blue balls to all red boxes.
+        according to the input, which are contextualized in the current world.  
+        For e.g. for the input ``put the blue ball in the red box'', this 
+        should generate a goal which matches all blue balls with all red boxes.
 	
 	Once the goals are generated, they are passed to the actual planner, which 
 	outputs a list of basic actions.
@@ -99,59 +109,69 @@
 	\subsubsection{World and Goal representation.}
         
         For simple cases a goal is represented either as a relation that must 
-        hold between two objects, or as the fact that the arm must hold 
-        a object.  \\
+        hold between two objects, or as the fact that the arm holds an object.  \\
 
-\begin{verbatim}
+\begin{lstlisting}
 Goal = MoveObj Id Relation Id
      | TakeObj Id 
-\end{verbatim}
+\end{lstlisting}
 
         This simple representation is enough to handle all cases where the ``the'' and
         ``any'' quantifiers are involved.  \\
 
-        But we wanted to handle ``all'' quantifiers so we had to add the notion of 
-        composed goal (this is, \textit{put all balls
+        In order to handle the ``all'' quantifier, we had to add the notion of 
+        a composed goal (that is, \textit{put all balls
         in a box} should generate a goal composed by all the boxes in some box). For 
-        this purpose, we extend the goal datatype with two more clauses.  \\
+        this purpose, we extend the goal datatype with two more clauses:  \\
 
-\begin{verbatim}
+\begin{lstlisting}
 Goal = And [Goal]
      | Or [Goal]
      | MoveObj Id Relation Id
      | TakeObj Id 
-\end{verbatim}
+\end{lstlisting}
 
 As for the world representation, we defined the following record:
-\begin{verbatim} 
+\begin{lstlisting}
 WorldState = 
   { _holding     :: Maybe Id
   , _positions   :: M.Map Id (Int, Int)
   , _world       :: [[Id]]
   , _objectsInfo :: M.Map Id Object } 
-\end{verbatim}
+\end{lstlisting}
 
-A state in the state space is the combination of \texttt{\_holding} (if any object is holded by the arm and which), \texttt{\_positions} (position of every object) and \texttt{\_world} (a list of stacks representing just the ids of the objects of the world). Note that \texttt{\_objectsInfo} does not belongs to a state in the search space 
-remains the same through the whole program).
+A state in the state space is the combination of \texttt{\_holding} (if any 
+object is held by the arm and which it is), \texttt{\_positions} (position of every 
+object) and \texttt{\_world} (a list of stacks representing just the ids of the 
+objects of the world). Note that \texttt{\_objectsInfo} does not belong to a 
+state in the search space.
+It remains the same throughout the program).
   
   \section{Interpretation}
-  This is the phase executed after the parsing and before the planning. Its responsibility is to translate a 
-  parse tree into a goal (or a set of goals) and solve possible ambiguity problems. Details about these two steps 
-  can be found in some of the next extension sections.
+  This is the phase executed after the parsing and before the planning. Its 
+  responsibility is to translate a parse tree into a goal (or a set of goals) 
+  and solve possible ambiguity problems. Details about these two steps can be 
+  found in some of the next extension sections.
 
-  In a nutshell, it tries to find all the objects refered by the utterance sent to the system and return a list of
-  goals that are actually possible. If more than one goal is found, then it tries to solve the ambiguity by 
-  suggesting to the user more concrete sentences.
+  In a nutshell, it tries to find all the objects reffered to by the utterance, 
+  sends them to the system and returns a list of goals that are actually 
+  possible. If more than one goal is found, it tries to solve the ambiguity by 
+  suggesting more concrete sentences to the user 
 
 
   \section{Planning}
-  This phase tries to satisfy a given goal. It can use two different search methods (breadth-first search and A*). At every state, it find all possible next states (discarding those who were already checked) and keeps going 
-  until it satisfies the goal. Note than if A* is used, the heuristics described in following sections help to 
-  follow a potentially good path instead of just checking every possibility.
+  This phase tries to satisfy a given goal. It can use two 
+  different search methods (breadth-first search and A*). At every state, it 
+  find all possible next states (discarding those who were already checked) and 
+  keeps going until it satisfies the goal. Note than if A* is used, the 
+  heuristics described in the following sections help to follow a potentially good 
+  path instead of just checking every possibility.
 
-  In order to generate all the possible next states, we use a function\footnote{Quite easy to implement 
-  since the only movement we have to take care of is dropping an object on top of another} 
-  which finds out if a movement if possible and, in that case, the resulting world of doing so is added.
+  In order to generate all possible next states, we use a 
+  function\footnote{Quite easy to implement since the only movement we have to 
+  take care of is dropping an object on top of another} which finds out if a 
+  movement if possible and, in that case, the resulting world of doing so is 
+  added.
 
 	% ==========================================================================
 	\section{Extensions}
@@ -171,7 +191,7 @@ remains the same through the whole program).
             \item {\bf Any}: this is how we processed all before (this is, just pick one
             among all the matches).
             \item {\bf All}: we changed this, so now it actually matches everything 
-            (we will explain this during in the following section).
+            (we will explain this during in the following section)
           \end{itemize}
 
           \subsubsection{Composed goals}
@@ -179,12 +199,12 @@ remains the same through the whole program).
           in a box} should generate a goal composed by all the boxes in some box). For 
           this purpose, we redefine the goal datatype:
 
-\begin{verbatim}
+\begin{lstlisting}
 data Goal = And [Goal]
      | Or [Goal]
      | MoveObj Id Relation Id
      | TakeObj Id deriving (Eq, Show)
-\end{verbatim}
+\end{lstlisting}
 
           We don't think there is much room for explanation here, a goal is either 
           taking an object or moving it, or a set of those. There are two kinds of 
@@ -205,15 +225,15 @@ data Goal = And [Goal]
           composed of all the possible goals involving the blue ball in a box. Let's say
           we have, in our world, a blue ball \textit{b} and two boxes \textit{b1} and \textit{b2}. The goal would be something like:
 
-\begin{verbatim}
+\begin{lstlisting}
   Or [MoveObj b Ontop b1
-  , MoveObj b Ontop b2]
-\end{verbatim}
+    , MoveObj b Ontop b2]
+\end{lstlisting}
 
           After some struggling, we came up with an easy solution to this problem, using list comprehensions.
           First, we have to select the operators using the quantifiers, and then generate all the valid possibilities.
 
-\begin{verbatim}
+\begin{lstlisting}
 let locList = matchingLocations
     objList = matchingObjects
 in
@@ -221,30 +241,78 @@ in
     [sndOperator $ 
       [MoveObj id1 rel id2
       | (rel, id2) <- locList
-      , validMovement 
-          objects id1 id2 rel]
+      , validMovement objects id1 id2 rel]
   | id1 <- objList] ]
-\end{verbatim}
+\end{lstlisting}
 	
         \subsection{Ambiguity resolution}
-          The approach here was to modify the \texttt{findEntities} function so it can return
-           either a list of matches or a list of conflicts. As an example, if we have two 
-           balls and receive the utterance "take the ball", then we have a conflict because 
-           we are requiring an specific object (using the quantifier \texttt{the}) and there
-           exist two objects matching the description.
+          The approach here was to modify the \texttt{findEntities} function so 
+          it can return either a list of matches or a list of conflicts. As an 
+          example, if we have two balls and receive the utterance "take the 
+          ball", then we have a conflict because we are requiring a specific 
+          object (using the quantifier \texttt{the}) and there exist two 
+          objects matching the description.
 
-          If the interpreter doesn't find any ambiguity then the goal is sent to the planner 
-          and everything goes on as before. However, if any ambiguity is found, then the 
-          list of ids is sent to another function which tries to remove the disambiguity 
-          (this is, giving unique descriptions to every id). After finding unique 
-          descriptions, they are sent as a response and showed in a pop up to the user.
+          If the interpreter doesn't find any ambiguity then the goal is sent 
+          to the planner and everything goes on as before. However, if any 
+          ambiguity is found, then the list of ids is sent to another function 
+          which tries to remove the ambiguity (this is, giving unique 
+          descriptions to every id). After finding unique descriptions, they 
+          are sent as a response and showed in a pop up window to the user.
 
-          Due to time issues we are not solving all the ambiguity conflicts. It works really well
-          with ambiguity interpreting one parse tree, but it doesn't handle ambiguities coming from 
-          the interpretation of different parse trees.
+          Due to time issues we are not solving all the ambiguity conflicts. It 
+          works really well with ambiguity interpreting one parse tree, but it 
+          doesn't handle ambiguities coming from the interpretation of 
+          different parse trees.
 
-          \subsubsection{Unique identification of objects}
-          TODO
+      \subsubsection{Unique identification of objects}
+
+      In many cases, the description of objects, shown either in the generated 
+      suggestions list or in the abmiguity pop-up window, is longer than 
+      necessary. As stated earlier, the description of an object is composed of 
+      its size, color and form. Thus when an object can be described with less 
+      than these three attributes, the rest of them become redundant and only 
+      interfer with the readability of the text. We want to aviod utterances 
+      like \texttt{the blue object} or \texttt{the red small object}, so the 
+      form of the object should always be displayed.
+
+      The main work is done in the function 
+      \texttt{fewestAttributesToIdentifyObject}. Given a particular object, it 
+      returns an \texttt{Entity} in which some of the attributes of the objects 
+      are not set, i.e. are \texttt{AnySize}, \texttt{AnyColor}. It is enforced, 
+      that the form should not be \texttt{AnyForm}, but the form of the passed 
+      object. When an ``\texttt{Any*}'' attribute is encountered in the 
+      displaying function, it is left out, so that only attributes which are 
+      actually set are displayed.
+
+      The actual calculation of the smallest number of attributes is done as 
+      follows. Every possible description of the object is generated by 
+      setting/unsetting one or more of its attributes. Then for each of those 
+      combinations it is tested if exactly one object could be found in the 
+      world, matching those attributes. This is done by calling the 
+      \texttt{findEntities} function and keeping only the returned objects 
+      which were created by the \texttt{Left} constructor.
+
+      After filtering out all descriptions, which refer to more than one object 
+      in the world, the list is either empty or non-empty. When it is 
+      non-empty, it means that we have more than one way to describe an object 
+      uniquely, so we must choose the description with the fewest set 
+      attributes. This is done by taking the minimum description of the list 
+      with respect to the number of set attributes.
+
+      If the list is empty, it means that there is an ambiguity. There is more 
+      than one object returned, even with all the attributes set. Therefore, 
+      the object must be described in relative to other objects in the world, 
+      to avoid the ambiguity.
+      
+      To do this, the world is searched for another object to be put in 
+      relation to our current object. For every combination of our current 
+      object, another object in the world and every relation, it is tested if 
+      \texttt{findEntities} returnes a \texttt{Left}.
+      As before, all combinations of set/unset attributes are 
+      also generated, for both our current object and the other world object 
+      we try to relate to. We take the minimum out of this list with respect to 
+      the sum of the set attributes in both objects.
 
         \subsection{Handling bigger worlds}
         The breadth-first search strategy worked well at first: we were getting solutions 
@@ -307,7 +375,7 @@ in
         On the other hand we found some examples for which the heuristics weren't useful at all, 
         but we think that, overall, they were totally worth it.
 
-\begin{table*}[t]
+\begin{table*}[b]
     \begin{tabular}{|l|l|l|l|l|}
     \hline
     World   & Utterance                                               & A*     & BFS     & Improvement\\ \hline
@@ -327,20 +395,124 @@ in
 \end{table*}
         \subsection{Suggestions}
 
-        We came up with the idea of suggesting the user some interesting sentences. This is, we want 
-        to prove to the user our system can handle difficult tasks. In order to do this, we first needed 
-        to find a way to measure how hard a goal was without actually solving it (otherwise it would be 
-        prohitibely slow). We realised that the already implemented heuristics were a good tool, so we decided 
-        to use them.
+        We came up with the idea of suggesting the user some interesting 
+        sentences. This is, we want to prove to the user our system can handle 
+        difficult tasks. In order to do this, we first needed to find a way to 
+        measure how hard a goal was without actually solving it (otherwise it 
+        would be prohitibely slow). We realised that the already implemented 
+        heuristics were a good tool, so we decided to use them.
 
-        The idea is the following: we generate a bunch of possible goals (not extremely complicated, composed 
-        of a simple movement) and we calculate the heuristics for them. After that, we just select the ones with 
-        the highest heuristics (so they're likely to be harder).
+        The idea is the following: we generate a bunch of possible goals (not 
+        extremely complicated, composed of a simple movement) and we calculate 
+        the heuristics for them. After that, we just select the ones with the 
+        highest heuristics (so they're likely to be harder).
+
 	\subsection{Partial order planning}
 
-	% ==========================================================================
-	\section{Conclusions}
+        We started to implement a partial order planner as an advanced planning
+        algorithm but got stuck at a half-finished state. 
 
+        The basic building blocks of this algorithm are move actions with their
+        preconditions and effects. A partial order of the actions and causal links
+        between effects and preconditions.
+
+        A move action specifies a move of an object from one position to another
+        position by sayíng what has to be true before it can execute and what is true
+        after.  The proconditions and effects are represented as conjuncts of simple
+        predicates such as (ball ontoop box), (box1 < box2) etc.  The actions are
+        variable and can thus mold in to any wanted move action that fit the
+        constraints.  We use a different move action depending on the relation of the
+        goal (beside, above ...) We illustrate with the move action for goals with
+        relation leftof or rightof.
+
+\begin{lstlisting}
+move obj from a to b 
+pre: 
+  (obj ontop a) (clear obj) (clear b) 
+  (not-eq obj a) (not-eq obj b)
+    (not-eq a b)
+      (physical laws constraints)
+eff: 
+  (obj ontop b) (not (obj ontop a))
+    (clear a) (not (clear a))
+  
+  when (a < b) -->
+    (obj > a) (not (obj < b))
+  when (a > b) -->
+    (obj < a) (not (obj > b))
+  
+  for all objects x except obj,a and b
+  when (a < x < b) --> (x < obj)    
+  when (b < x < a) --> (x > obj)
+
+  when - Conditional effect
+    The right hand side is an effect if
+    the lhs is true before the action
+    executes  
+\end{lstlisting}
+
+The algorithm works by firstly setting up a start state (as an action that
+precedes every other action, has no preconditions and has the start state as
+it's effects) and a goal state (as an action thet procedes every other action
+with the goal as an precondition and nothing as it's effects) The goal conjunct
+is then put on the agenda (a queue of precondition conjuncts we want to satisfy)
+
+We call the algorithm with this so called null plan
+A high-level rough description of the algorithm follows
+\begin{enumerate}
+\item 
+  Choose a goal on the agenda, if it's empty and all variables have been
+  assigned values, we're successfull.
+\item 
+  Try to instantiate or choose an already existing action that has in it's
+  effects, a conjunct that can unify with the goal conjunct given existing
+  variable assignments, non-codesignation constraints and physical laws
+  constraints.  If the chosen effect is conditional, add its lhs to the agenda
+  unless it's already been used in a link.  Order the chosen action before the
+  goal action.  Draw a causal link between the effect satisfying the goal and
+  the goal If we instantiated a new action, put all it's precondition conjuncts
+  on the agenda.  (Except the non codesignation constraints)  
+\item
+  We now check if any causal link is potentially interfering with any action.
+  If we find that an action who's effects negate a causal link is not surely
+  ordered before or after that causal link then we must either move the action
+  before or after the causal link. 
+\item
+  Recursively invoke algorithm. (If we have no satisfying choices at any 
+  'choice point', we backtrack)
+\end{enumerate}
+
+If the algorithm returns successfully then we have a consistent ordering of move
+actions leading from start to goal state.
+
+This above is the proposed algorithm which we intended to implement.  At this
+moment the algorithm cannot yet fully handle variable actions, advanced goals
+(not treated above either), conditional effects and only the relation ontop is
+supported. 
+    
+% ==========================================================================
+\section{Conclusions}
+By developing this project, we could see how intelligence can be simulated and 
+aswell we have seen its limitiations.  
+
+Even do for some complex scenarions the planner seems to do a smarter work 
+than a human while it is really an exhaustive search for every possible sequence 
+of movements.  
+
+We have also seen how heuristics can make a great improvment to the search 
+speed, but in this improvment there is always a trade of between how 
+the search is speed up and how they make the planning much more heavier.  
+
+By implementing our algorithms and testing the planner with different worlds 
+we came back to the old question of the true semantics of the word 
+intelligence. 
+
+It is easy to be mislead by a simple planner which is more powerfull 
+than human reason, but lacks the intuition and human emotion. Which in so many 
+cases is the backbone of human reasoning.    
+
+If true intelligence will ever be ``simulated'' will be a question that only 
+time can answer.  
 \newpage
 \appendix
 \section{Individual report: Santiago Munín González}
@@ -350,7 +522,7 @@ was the main contributor of some pieces of the project.
 \subsection{Basic project}
 
 Here, I focused mostly on the interpretation and did small contributions on the planning (like bug fixing and 
-helping with some functions). During this phase I done some functions to check if a relationship is valid, 
+helping with some functions). During this phase I've done some functions to check if a relationship is valid, 
 objects/locations matching and filtering, etc.
 
 \subsection{Extension: Quantifiers}
@@ -376,7 +548,7 @@ when we look for an object description using the quantifier "The" and more than 
 
 I was responsible for adding any Javascript/HTML in order to add any functionality (such as search strategy selection, suggestions, or disambiguity). 
 
-\section{Individual report: Carlos Tom\'e Cortiñas}
+\section{Individual report: Carlos Tomé Cortiñas}
 As I understand group work, this kind of project is meant not to be splitted 
 in different parts and the join all together, but meeting and discussing every step
 of the project so everybody contributes to it.  \\
@@ -392,7 +564,7 @@ In this part I was mostly responsible for the BFS planner, and the integration
 of the different modules. \\
 
 \subsection{Extension: Quantifiers}
-In this section, I was not directly involved in the developing, althoug I 
+In this section, I was not directly involved in the developing, although I 
 contributed with the testing, and debugging and In a small way on the high 
 level ideas behind what we do.  \\
 
@@ -412,5 +584,26 @@ This extension was developed between Robert, Santiago and me.  \\
 
 In this section I contributed in the high level ideas behind our way of 
 uniquely identify an object in the world.  \\
+
+\section{Individual report: Robert Hangu}
+
+The design and planning of the project, as well as the implementation of 
+the main functionality was done by all four of us. This includes high-level 
+discussions about how we handle certain problems as well as the declarations 
+and interfaces of the used functions.
+
+\subsection{Extension: Suggestions}
+
+I co-developed this extension together with Santiago and Carlos. My primary 
+focus here was the unique identification of objects in the world together with 
+their shortest description. This functionality is used in printing the most 
+compact object descriptions for the generated suggestions as well as for the 
+ambiguity resolution pop-up window.
+
+\section{Individual report: Simon Lindfors}
+
+I was together with everybody else in the group involved in building the first 
+version.  The one that satisfied the basic requirements.  I was the sole 
+contributor of the partial order planner extension.
 
 \end{document}
