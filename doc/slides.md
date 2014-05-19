@@ -66,7 +66,11 @@ data WorldState = WState { _holding     :: Maybe Id,
                            _objectsInfo :: M.Map Id Object } deriving Show
 ```
 
-
+```haskell
+actions :: WorldState -> [Action]
+isSolution :: WorldState -> Goal -> Bool
+transition :: WorldState -> Action -> WorldState
+```
 * * *
 
 ### Planning: BFS
@@ -92,10 +96,12 @@ data WorldState = WState { _holding     :: Maybe Id,
 
 ```haskell
 
+heuristicAStar :: WorldState -> Goal -> Int
 heuristicAStar worldState goal@(MoveObj id1 Ontop id2)
   case _holding worldState of
     Nothing  ->
-      if id2 /= "Floor" && relationHolds worldState id2 Above id1 then
+      if id2 /= "Floor" 
+         && relationHolds worldState id2 Above id1 then
         movesToFreeId1 + 2 * (y1 - y2)
       else
         movesToFreeId1 + movesToFreeId2
@@ -103,14 +109,14 @@ heuristicAStar worldState goal@(MoveObj id1 Ontop id2)
       | obj == id1 -> movesToFreeId2
       | otherwise  -> movesToFreeId1 + movesToFreeId2
     where
-      movesToFreeId1 = 2 * length (_world worldState !! x1) - y1
-      movesToFreeId2 = if id2 == "Floor" then 2 * minimum (map length (_world worldState))
-                           else 2 * length (_world worldState !! x2) - y2
+      movesToFreeId1 = ...
+      movesToFreeId2 = ... 
 ```
 * * *
 ### Planning: Heuristics (Leftof)
 
 ```haskell
+heuristicAStar :: WorldState -> Goal -> Int
 heuristicAStar worldState goal@(MoveObj id1 Leftof id2)
   Leftof -> [cost1 + cost2 | (index1, cost1) <- costs1
                            , (index2, cost2) <- costs2
@@ -118,12 +124,13 @@ heuristicAStar worldState goal@(MoveObj id1 Leftof id2)
     where
       costs1 = zip [1..] $ calculateCosts id1
       costs2 = zip [1..] $ calculateCosts id2
-      calculateCosts id = map (stackheuristicAStar id) $ _world worldState
+      calculateCosts id = ...
 ```
 * * *
 ### Planning: Heuristics (And/Or)
 
 ```haskell
+heuristicAStar :: WorldState -> Goal -> Int
 heuristicAStar worldState (And goals) =
   maximum $  map (heuristicAStar worldState) goals
 heuristicAStar worldState (Or goals) =
