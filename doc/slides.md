@@ -66,7 +66,14 @@ data WorldState = WState { _holding     :: Maybe Id,
                            _objectsInfo :: M.Map Id Object } deriving Show
 ```
 
+```haskell
+actions :: WorldState -> [Action]
 
+isSolution :: WorldState -> Goal -> Bool
+
+transition :: WorldState -> Action -> WorldState
+
+```
 * * *
 
 ### Planning (II)
@@ -100,7 +107,7 @@ BFS is not always enough. A* turned out to be:
 ##### Heuristics
 
 ```haskell
-
+heuristicAStar :: WorldState -> Goal -> Int
 heuristicAStar worldState (And goals) =
   maximum $  map (heuristicAStar worldState) goals
 heuristicAStar worldState (Or goals) =
