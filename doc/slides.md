@@ -146,6 +146,51 @@ heuristicAStar worldState (Or goals) =
 
 ### Suggestions
 
++ Suggest some interesting use cases
++ Show that system can handle difficult tasks
++ Simple moevements, but hard to solve
+
++ E.g.
+  + `put the white brick on the table`
+  + `put the green ball inside the red box`
+
+* * *
+
+### Generating suggestions
+
++ Generate all possible movements
++ Sort them by hardness
+  + Hardness from existing heuristics
+
+* * *
+
+### Smallest object description (I)
+
++ Objects have three attributes
++ Constructor
+  + `Object Size Color Form`
++ Instantiation 
+  + `Object small red brick`
+  + `Object AnySize AnyColor brick`
+
+* * *
+
+### Smallest object description (II)
+
++ Often redundant attributes, because object is unique
++ Keep only relevant attributes
+  + Always keep `Form`
+
++ Generate all combinations of attributes
++ Check if object is unique
++ Take description with fewest attributes
+
+* * *
+
+### Ambiguity in the description
+
++ If ambiguity, relate object to others
++ Do the same as above with its attributes
 
 * * *
 
