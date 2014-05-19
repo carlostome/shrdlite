@@ -9,7 +9,7 @@
 
 ### Interpretation: Ambiguities 
 
-#### Two kind of ambiguities:
+#### Two kinds of ambiguities:
 
 + There is more than one tree that can deliver any number of goals.
   + We don't handle this kind of ambiguity.
@@ -54,7 +54,7 @@ description of all the objects that matches the given criteria.
 
 * * *
 
-### Planning (I)
+### Planning: State space
 
 #### State representation
 
@@ -69,11 +69,7 @@ data WorldState = WState { _holding     :: Maybe Id,
 
 * * *
 
-### Planning (II)
-
-#### First approach: BFS
-
-Classic breadth-first search algorithm:
+### Planning: BFS
 
 + Easy to implement.
 + Fairly efficient for simple tasks.
@@ -84,66 +80,60 @@ Classic breadth-first search algorithm:
 
 * * *
 
-### Planning (III)
+### Planning: A*
 
-#### Second approach: A*
-
-BFS is not always enough. A* turned out to be:
 + Still easy to implement.
 + More efficient at some tasks.
 + Not as efficient at others: 
   + The heuristics add some overhead to the process. 
 
 * * *
-### Planning (IV)
-
-##### Heuristics
+### Planning: Heuristics (on top of / inside)
 
 ```haskell
 
+heuristicAStar worldState goal@(MoveObj id1 Ontop id2)
+  case _holding worldState of
+    Nothing  ->
+      if id2 /= "Floor" && relationHolds worldState id2 Above id1 then
+        movesToFreeId1 + 2 * (y1 - y2)
+      else
+        movesToFreeId1 + movesToFreeId2
+    Just obj 
+      | obj == id1 -> movesToFreeId2
+      | otherwise  -> movesToFreeId1 + movesToFreeId2
+    where
+      movesToFreeId1 = 2 * length (_world worldState !! x1) - y1
+      movesToFreeId2 = if id2 == "Floor" then 2 * minimum (map length (_world worldState))
+                           else 2 * length (_world worldState !! x2) - y2
+```
+* * *
+### Planning: Heuristics (Leftof)
+
+```haskell
+heuristicAStar worldState goal@(MoveObj id1 Leftof id2)
+  Leftof -> [cost1 + cost2 | (index1, cost1) <- costs1
+                           , (index2, cost2) <- costs2
+                           , index1 < index2]
+    where
+      costs1 = zip [1..] $ calculateCosts id1
+      costs2 = zip [1..] $ calculateCosts id2
+      calculateCosts id = map (stackheuristicAStar id) $ _world worldState
+```
+* * *
+### Planning: Heuristics (And/Or)
+
+```haskell
 heuristicAStar worldState (And goals) =
   maximum $  map (heuristicAStar worldState) goals
 heuristicAStar worldState (Or goals) =
   minimum $  map (heuristicAStar worldState) goals
-heuristicAStar worldState goal@(MoveObj id1 rel id2)
-    case rel of
-      Ontop -> case _holding worldState of
-                 Nothing  ->
-                   if id2 /= "Floor" && relationHolds worldState id2 Above id1 then
-                     movesToFreeId1 + 2 * (y1 - y2)
-                   else
-                     movesToFreeId1 + movesToFreeId2
-                 Just obj 
-                   | obj == id1 -> movesToFreeId2
-                   | otherwise  -> movesToFreeId1 + movesToFreeId2
-                      
-        where
-          movesToFreeId1 = 2 * length (_world worldState !! x1) - y1
-          movesToFreeId2 = if id2 == "Floor" then 2 * minimum (map length (_world worldState))
-                           else 2 * length (_world worldState !! x2) - y2
-
-      Leftof -> [cost1 + cost2 | (index1, cost1) <- costs1
-                               , (index2, cost2) <- costs2
-                               , index1 < index2]
-      where
-        costs1 = zip [1..] $ calculateCosts id1
-        costs2 = zip [1..] $ calculateCosts id2
-        calculateCosts id = map (stackheuristicAStar id) $ _world worldState
 ```
 
 * * *
 
-### Planning (V)
-
-#### Comparison
-| World        | Utterance      | A* | BFS | Improvement | 
-| ------------- |:-------------:| -----:|-----:|-----:|
-|    Small   | put the white ball in a box on the floor                | 13     | 141     | 984.61%    
-|    Small   | put all boxes on the floor                              | 62     | 75      | 20.96%     
-|    Medium  | move the large ball inside a yellow box on the floor    | 17     | 11633   | 68329.41%  
-|    Medium  | put the brick that is to the left of a pyramid in a box | 9      | 257     | 2755.55%   
-|    Complex | put all boxes on the floor                              | 393788 | 969239  | 146.13%    
-|    Complex | put all red objects on the floor                        | 274328 | 599034  | 118.36%    
+### Planning: Comparison
+![Comparison table (states travelled)](http://i.gyazo.com/6f37371c2d626a348c7b21079eaf91dc.png)
 
 * * *
 
