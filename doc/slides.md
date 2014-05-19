@@ -5,10 +5,9 @@
 3. Given a goal and the current world, plans how to achieve it with minimum cost.
 4. Returns the output to the interface.
 
-
 * * *
 
-### Interpretation (I)
+### Interpretation: Ambiguities 
 
 #### Two kind of ambiguities:
 
@@ -19,8 +18,8 @@
 
 * * *
 
-### Interpretation (II)
-#### Quantifiers
+### Interpretation: Quantifiers (I)
+
 Goals are defined in this way:
 
 ```haskell
@@ -30,6 +29,10 @@ data Goal = And [Goal]
           | TakeObj Id deriving (Eq, Show)
 ```
 
+* * *
+
+### Interpretation: Quantifiers (II)
+
 *Example 1*: Put all balls in a box
 
 ```haskell
@@ -37,6 +40,9 @@ And [ Or [MoveObj ball1 Inside box1, MoveObj ball1 Inside box2, ...]
     , Or [MoveObj ball2 Inside box1, MoveObj ball2 Inside box2, ...]]
 ```
 
+* * *
+
+### Interpretation: Quantifiers (and III)
 *Example 2*: Put the ball in a box
 
 ```haskell
@@ -52,13 +58,11 @@ description of all the objects that matches the given criteria.
 
 #### State representation
 
-A state consists of:
-
 ```haskell
 data WorldState = WState { _holding     :: Maybe Id,
                            _positions   :: M.Map Id (Int, Int),
                            _world       :: World,
-                           -- Useful, but not part of the state (it doesn't change with the actions).
+-- Useful, but not part of the state (it doesn't change with the actions).
                            _objectsInfo :: M.Map Id Object } deriving Show
 ```
 
