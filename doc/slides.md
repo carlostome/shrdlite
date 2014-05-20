@@ -194,6 +194,40 @@ heuristicAStar worldState (Or goals) =
 
 * * *
 
+### Partial order planner (I)
+
+1. Try to satisfy a precondition by summoning a new or using
+an existing action. These are now ordered.
+2. Resolve eventual threats
+3. Repeat until no preconditions are left unsatisfied
+
+* * *
+
+### Partial order planner (II)
+
+```haskell
+move obj from a to b 
+pre: 
+  (obj ontop a) (clear obj) (clear b) 
+  (not-eq obj a) (not-eq obj b)
+  (not-eq a b) (physical laws constraints)
+eff: 
+  (obj ontop b) (not (obj ontop a))
+    (clear a) (not (clear a))
+  
+  when (a < b) -->
+    (obj > a) (not (obj < b))
+  when (a > b) -->
+    (obj < a) (not (obj > b))
+  
+  for all objects x except obj,a and b
+  when (a < x < b) --> (x < obj)    
+  when (b < x < a) --> (x > obj)
+
+```
+
+* * *
+
 ### Extensions implemented
 
 + Quantifiers
