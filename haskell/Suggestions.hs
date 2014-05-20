@@ -66,7 +66,7 @@ getObjectDescription worldState id
        BasicEntity Any (Object AnySize AnyColor AnyForm) -> []
        BasicEntity _ obj -> objAttrsToString obj
        RelativeEntity q1 thisObj (Relative rel (BasicEntity q2 obj2)) ->
-         objAttrsToString thisObj ++ ((map toLower $ show rel) : "the" : objAttrsToString obj2)
+         objAttrsToString thisObj ++ ((unwords $ getRelationDescription rel) : "the" : objAttrsToString obj2)
 
 -- | Returns a list of strings of the attributes of an object
 objAttrsToString :: Object -> [String]
