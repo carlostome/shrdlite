@@ -16,7 +16,7 @@ from subprocess import Popen, PIPE, STDOUT
 
 # Haskell
 SCRIPTDIR = 'haskell'
-SCRIPT = ['./Shrdlite']
+SCRIPT = ['stack', 'exec', 'shrdlite']
 
 # # Python
 # SCRIPTDIR = 'python'
@@ -31,7 +31,7 @@ print()
 try:
     form = cgi.FieldStorage()
     data = form.getfirst('data')
-    script = Popen(SCRIPT, cwd=SCRIPTDIR, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    script = Popen(SCRIPT,cwd=SCRIPTDIR, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     out, err = script.communicate(data)
 
     print(out)

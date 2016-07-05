@@ -1,4 +1,3 @@
 #!/bin/bash
 
-make -C haskell/
-python -m CGIHTTPServer 8000
+python2 -m CGIHTTPServer 8000
