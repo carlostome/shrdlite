@@ -25,9 +25,17 @@ cd haskell
 stack build
 ```
 
-Then the program can be run from the root folder with the command:
+
+
+Usage 
+==========================
+
+To use the program just use the script on the root folder of the project:
 
 ```bash
 ./run.sh
 
 ```
+
+Then visit [localhost:8000/shrdlite.html](https://localhost:8000/shrdlite.html) and play
+with it!
