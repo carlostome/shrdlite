@@ -7,7 +7,7 @@ University of Technology.  For more information, see the course webpages:
 
 - <http://www.cse.chalmers.se/edu/course/TIN172/>
 
-In the file ORIG_README.md the original instructions for that project can be
+In the [original readme](ORIG_README.md) the original instructions for that project can be
 found.
 
 
